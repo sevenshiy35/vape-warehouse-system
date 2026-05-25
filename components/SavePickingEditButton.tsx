@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   orderId: string
@@ -10,15 +11,20 @@ type Props = {
 
 export default function SavePickingEditButton({ orderId, status }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
 
   async function handleSave() {
     if (status !== 'picking_editing') {
-      alert('只有修改中的拣货订单需要保存')
+      notify({ type: 'warning', title: '只有修改中的拣货订单需要保存' })
       return
     }
 
-    const ok = window.confirm('确认保存本次修改，并让订单回到拣货中吗？')
+    const ok = await confirm({
+      title: '确认保存本次修改？',
+      message: '保存后订单会回到拣货中。',
+      confirmText: '保存修改',
+    })
     if (!ok) return
 
     setLoading(true)
@@ -35,11 +41,15 @@ export default function SavePickingEditButton({ orderId, status }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('保存修改失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '保存修改失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('修改已保存，订单已回到拣货中')
+    notify({ type: 'success', title: '修改已保存，订单已回到拣货中' })
     router.refresh()
   }
 

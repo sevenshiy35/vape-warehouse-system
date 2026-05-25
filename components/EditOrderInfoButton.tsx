@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   orderId: string
@@ -19,6 +20,7 @@ export default function EditOrderInfoButton({
   currentNote,
 }: Props) {
   const router = useRouter()
+  const { notify } = useFeedback()
 
   const [open, setOpen] = useState(false)
   const [customerName, setCustomerName] = useState(currentCustomerName || '')
@@ -34,17 +36,17 @@ export default function EditOrderInfoButton({
 
   async function handleSave() {
     if (status === 'completed') {
-      alert('已完成订单不能修改订单信息')
+      notify({ type: 'warning', title: '已完成订单不能修改订单信息' })
       return
     }
 
     if (status === 'cancelled') {
-      alert('已取消订单不能修改订单信息')
+      notify({ type: 'warning', title: '已取消订单不能修改订单信息' })
       return
     }
 
     if (!address.trim()) {
-      alert('地址不能为空')
+      notify({ type: 'warning', title: '地址不能为空' })
       return
     }
 
@@ -67,10 +69,15 @@ export default function EditOrderInfoButton({
     setLoading(false)
 
     if (!res.ok) {
-      alert('保存失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '保存失败',
+        message: data.error,
+      })
       return
     }
 
+    notify({ type: 'success', title: '订单信息已保存' })
     setOpen(false)
     router.refresh()
   }

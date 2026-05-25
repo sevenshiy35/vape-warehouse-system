@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   itemId: string
@@ -10,6 +11,7 @@ type Props = {
 
 export default function DeleteOrderItemButton({ itemId, orderStatus }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
 
   const disabled =
@@ -19,16 +21,21 @@ export default function DeleteOrderItemButton({ itemId, orderStatus }: Props) {
 
   async function handleDelete() {
     if (orderStatus === 'completed') {
-      alert('这个订单已经完成，不能删除商品')
+      notify({ type: 'warning', title: '这个订单已经完成，不能删除商品' })
       return
     }
 
     if (orderStatus === 'cancelled') {
-      alert('这个订单已经取消，不能删除商品')
+      notify({ type: 'warning', title: '这个订单已经取消，不能删除商品' })
       return
     }
 
-    const ok = window.confirm('确认删除这个商品吗？')
+    const ok = await confirm({
+      title: '确认删除这个商品？',
+      message: '删除后订单明细会立即更新。',
+      confirmText: '删除商品',
+      tone: 'danger',
+    })
     if (!ok) return
 
     setLoading(true)
@@ -47,10 +54,15 @@ export default function DeleteOrderItemButton({ itemId, orderStatus }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('删除失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '删除失败',
+        message: data.error,
+      })
       return
     }
 
+    notify({ type: 'success', title: '商品已删除' })
     router.refresh()
   }
 

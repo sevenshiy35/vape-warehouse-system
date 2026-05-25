@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type RecognizedItem = {
   rawText: string
@@ -56,6 +57,7 @@ function getStatusClass(status: RecognizedItem['matchStatus']) {
 
 export default function RecognizeOrderButton({ orderId, status }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
 
   const [loading, setLoading] = useState(false)
   const [addingAll, setAddingAll] = useState(false)
@@ -65,12 +67,12 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
 
   async function handleRecognize() {
     if (status === 'completed') {
-      alert('已完成订单不建议重新识别')
+      notify({ type: 'warning', title: '已完成订单不建议重新识别' })
       return
     }
 
     if (status === 'cancelled') {
-      alert('已取消订单不能识别')
+      notify({ type: 'warning', title: '已取消订单不能识别' })
       return
     }
 
@@ -91,7 +93,11 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('AI识别失败：' + data.error)
+      notify({
+        type: 'error',
+        title: 'AI识别失败',
+        message: data.error,
+      })
       return
     }
 
@@ -101,12 +107,15 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
 
   async function addItem(item: RecognizedItem, index: number) {
     if (!item.productId) {
-      alert('这个商品没有匹配到库存 SKU，不能自动加入')
+      notify({
+        type: 'warning',
+        title: '这个商品没有匹配到库存 SKU，不能自动加入',
+      })
       return false
     }
 
     if (item.matchStatus !== 'matched') {
-      alert('这个商品需要人工确认，请手动添加')
+      notify({ type: 'warning', title: '这个商品需要人工确认，请手动添加' })
       return false
     }
 
@@ -128,7 +137,11 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
     const data = await res.json()
 
     if (!res.ok) {
-      alert(`添加失败：${item.rawText}\n${data.error}`)
+      notify({
+        type: 'error',
+        title: `添加失败：${item.rawText}`,
+        message: data.error,
+      })
       return false
     }
 
@@ -148,13 +161,16 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
     )
 
     if (matchedItems.length === 0) {
-      alert('没有可以一键加入的匹配成功商品')
+      notify({ type: 'info', title: '没有可以一键加入的匹配成功商品' })
       return
     }
 
-    const ok = window.confirm(
-      `确认把 ${matchedItems.length} 个匹配成功的商品加入订单吗？`
-    )
+    const ok = await confirm({
+      title: '确认一键加入商品？',
+      message: `将把 ${matchedItems.length} 个匹配成功的商品加入订单。`,
+      confirmText: '一键加入',
+      tone: 'success',
+    })
 
     if (!ok) return
 
@@ -179,6 +195,7 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
     }
 
     setAddingAll(false)
+    notify({ type: 'success', title: '匹配成功商品已加入订单' })
     router.refresh()
   }
 

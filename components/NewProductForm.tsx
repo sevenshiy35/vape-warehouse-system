@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 const brandOptions = [
   'SP',
@@ -17,6 +18,7 @@ const brandOptions = [
 
 export default function NewProductForm() {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
 
   const [sku, setSku] = useState('')
   const [brand, setBrand] = useState('SP')
@@ -37,28 +39,31 @@ export default function NewProductForm() {
     e.preventDefault()
 
     if (!brand.trim()) {
-      alert('请选择或输入品牌')
+      notify({ type: 'warning', title: '请选择或输入品牌' })
       return
     }
 
     if (!productNameCN.trim()) {
-      alert('请输入中文库存品名')
+      notify({ type: 'warning', title: '请输入中文库存品名' })
       return
     }
 
     if (!Number.isInteger(initialQty) || initialQty < 0) {
-      alert('初始库存必须是 0 或更大的整数')
+      notify({ type: 'warning', title: '初始库存必须是 0 或更大的整数' })
       return
     }
 
     if (initialQty > 0 && !shelfLocation.trim()) {
-      alert('初始库存大于 0 时，必须填写库位')
+      notify({ type: 'warning', title: '初始库存大于 0 时，必须填写库位' })
       return
     }
 
-    const ok = window.confirm(
-      `确认添加新品吗？\nSKU：${sku.trim() || '系统自动生成'}\n品牌：${brand}\n中文名：${productNameCN}\n初始库存：${initialQty}`
-    )
+    const ok = await confirm({
+      title: '确认添加新品？',
+      message: `SKU：${sku.trim() || '系统自动生成'}\n品牌：${brand}\n中文名：${productNameCN}\n初始库存：${initialQty}`,
+      confirmText: '添加新品',
+      tone: 'success',
+    })
 
     if (!ok) return
 
@@ -90,11 +95,15 @@ export default function NewProductForm() {
     setLoading(false)
 
     if (!res.ok) {
-      alert('添加新品失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '添加新品失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('新品添加成功')
+    notify({ type: 'success', title: '新品添加成功' })
 
     setSku('')
     setProductNameCN('')

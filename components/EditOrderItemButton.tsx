@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   itemId: string
@@ -17,6 +18,7 @@ export default function EditOrderItemButton({
   currentUnit,
 }: Props) {
   const router = useRouter()
+  const { notify } = useFeedback()
 
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(currentQty || 1)
@@ -33,17 +35,17 @@ export default function EditOrderItemButton({
 
   async function handleSave() {
     if (orderStatus === 'completed') {
-      alert('这个订单已经完成，不能修改商品')
+      notify({ type: 'warning', title: '这个订单已经完成，不能修改商品' })
       return
     }
 
     if (orderStatus === 'cancelled') {
-      alert('这个订单已经取消，不能修改商品')
+      notify({ type: 'warning', title: '这个订单已经取消，不能修改商品' })
       return
     }
 
     if (!qty || qty <= 0) {
-      alert('请输入正确数量')
+      notify({ type: 'warning', title: '请输入正确数量' })
       return
     }
 
@@ -65,10 +67,15 @@ export default function EditOrderItemButton({
     setLoading(false)
 
     if (!res.ok) {
-      alert('修改失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '修改失败',
+        message: data.error,
+      })
       return
     }
 
+    notify({ type: 'success', title: '商品数量已保存' })
     setOpen(false)
     router.refresh()
   }

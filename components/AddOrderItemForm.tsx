@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Product = {
   id: string
@@ -24,6 +25,7 @@ type Props = {
 
 export default function AddOrderItemForm({ orderId, products }: Props) {
   const router = useRouter()
+  const { notify } = useFeedback()
 
   const [productId, setProductId] = useState('')
   const [qty, setQty] = useState(1)
@@ -37,12 +39,12 @@ export default function AddOrderItemForm({ orderId, products }: Props) {
     e.preventDefault()
 
     if (!productId) {
-      alert('请选择商品')
+      notify({ type: 'warning', title: '请选择商品' })
       return
     }
 
     if (!qty || qty <= 0) {
-      alert('请输入正确数量')
+      notify({ type: 'warning', title: '请输入正确数量' })
       return
     }
 
@@ -65,10 +67,15 @@ export default function AddOrderItemForm({ orderId, products }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('添加失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '添加失败',
+        message: data.error,
+      })
       return
     }
 
+    notify({ type: 'success', title: '商品已添加' })
     setProductId('')
     setQty(1)
     setUnit('支')

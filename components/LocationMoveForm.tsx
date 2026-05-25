@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Product = {
   id: string
@@ -23,6 +24,7 @@ type Props = {
 
 export default function LocationMoveForm({ products }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
 
   const [productId, setProductId] = useState('')
   const [newShelfLocation, setNewShelfLocation] = useState('')
@@ -48,28 +50,34 @@ export default function LocationMoveForm({ products }: Props) {
     e.preventDefault()
 
     if (!productId) {
-      alert('请选择商品')
+      notify({ type: 'warning', title: '请选择商品' })
       return
     }
 
     if (currentQty <= 0) {
-      alert('这个商品当前库存为 0，不能挪动库位')
+      notify({ type: 'warning', title: '这个商品当前库存为 0，不能挪动库位' })
       return
     }
 
     if (!newShelfLocation.trim()) {
-      alert('请输入新库位')
+      notify({ type: 'warning', title: '请输入新库位' })
       return
     }
 
     if (newShelfLocation.trim() === currentShelf) {
-      alert('新库位和当前库位一样')
+      notify({ type: 'info', title: '新库位和当前库位一样' })
       return
     }
 
-    const ok = window.confirm(
-      `确认挪动库位吗？\n\n商品：${selectedProduct?.brand} | ${selectedProduct?.sku} | ${selectedProduct?.product_name_cn}\n库存数量：${currentQty}\n旧库位：${currentShelf || '无库位'}\n新库位：${newShelfLocation.trim()}`
-    )
+    const ok = await confirm({
+      title: '确认挪动库位？',
+      message: `商品：${selectedProduct?.brand} | ${selectedProduct?.sku} | ${
+        selectedProduct?.product_name_cn
+      }\n库存数量：${currentQty}\n旧库位：${
+        currentShelf || '无库位'
+      }\n新库位：${newShelfLocation.trim()}`,
+      confirmText: '确认挪动',
+    })
 
     if (!ok) return
 
@@ -92,11 +100,15 @@ export default function LocationMoveForm({ products }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('库位挪动失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '库位挪动失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('库位挪动成功')
+    notify({ type: 'success', title: '库位挪动成功' })
     setProductId('')
     setNewShelfLocation('')
     setReason('Location move')

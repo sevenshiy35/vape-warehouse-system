@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   orderId: string
@@ -10,15 +11,21 @@ type Props = {
 
 export default function CompletePickingButton({ orderId, status }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
 
   async function handleComplete() {
     if (status !== 'picking') {
-      alert('只有拣货中的订单可以完成拣货')
+      notify({ type: 'warning', title: '只有拣货中的订单可以完成拣货' })
       return
     }
 
-    const ok = window.confirm('确认这个订单已经拣货完毕吗？确认后订单状态会变成 completed。')
+    const ok = await confirm({
+      title: '确认拣货完成？',
+      message: '确认后订单状态会变成 completed。',
+      confirmText: '完成拣货',
+      tone: 'success',
+    })
     if (!ok) return
 
     setLoading(true)
@@ -35,11 +42,15 @@ export default function CompletePickingButton({ orderId, status }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('完成拣货失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '完成拣货失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('拣货完成')
+    notify({ type: 'success', title: '拣货完成' })
     router.refresh()
   }
 

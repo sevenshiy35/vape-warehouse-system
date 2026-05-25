@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Product = {
   id: string
@@ -23,6 +24,7 @@ type Props = {
 
 export default function CorrectionForm({ products }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
 
   const [productId, setProductId] = useState('')
   const [actualQty, setActualQty] = useState(0)
@@ -49,23 +51,30 @@ export default function CorrectionForm({ products }: Props) {
     e.preventDefault()
 
     if (!productId) {
-      alert('请选择商品')
+      notify({ type: 'warning', title: '请选择商品' })
       return
     }
 
     if (!Number.isInteger(actualQty) || actualQty < 0) {
-      alert('实际库存必须是 0 或更大的整数')
+      notify({ type: 'warning', title: '实际库存必须是 0 或更大的整数' })
       return
     }
 
     if (actualQty > 0 && !selectedInventory?.shelf_location && !shelfLocation.trim()) {
-      alert('修正后库存大于 0，但当前没有库位，请填写库位')
+      notify({
+        type: 'warning',
+        title: '修正后库存大于 0，但当前没有库位，请填写库位',
+      })
       return
     }
 
-    const ok = window.confirm(
-      `确认修正库存吗？\n当前库存：${beforeQty}\n实际库存：${actualQty}\n变化：${changeQty > 0 ? '+' : ''}${changeQty}`
-    )
+    const ok = await confirm({
+      title: '确认修正库存？',
+      message: `当前库存：${beforeQty}\n实际库存：${actualQty}\n变化：${
+        changeQty > 0 ? '+' : ''
+      }${changeQty}`,
+      confirmText: '确认修正',
+    })
 
     if (!ok) return
 
@@ -89,11 +98,15 @@ export default function CorrectionForm({ products }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('库存修正失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '库存修正失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('库存修正成功')
+    notify({ type: 'success', title: '库存修正成功' })
     setProductId('')
     setActualQty(0)
     setShelfLocation('')

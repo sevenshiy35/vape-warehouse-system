@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Props = {
   orderId: string
@@ -10,11 +11,12 @@ type Props = {
 
 export default function CancelOrderButton({ orderId, status }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
 
   async function handleCancel() {
     if (status === 'cancelled') {
-      alert('这个订单已经取消')
+      notify({ type: 'info', title: '这个订单已经取消' })
       return
     }
 
@@ -23,7 +25,12 @@ export default function CancelOrderButton({ orderId, status }: Props) {
         ? '这个订单已经完成。确认取消后，系统会把本单商品库存加回去，并写入 OrderReversal 流水。确认取消吗？'
         : '确认取消这个订单吗？未完成订单不会影响库存。'
 
-    const ok = window.confirm(message)
+    const ok = await confirm({
+      title: '确认取消订单？',
+      message,
+      confirmText: '取消订单',
+      tone: 'danger',
+    })
     if (!ok) return
 
     setLoading(true)
@@ -42,11 +49,15 @@ export default function CancelOrderButton({ orderId, status }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('取消订单失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '取消订单失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('订单已取消')
+    notify({ type: 'success', title: '订单已取消' })
     router.refresh()
   }
 

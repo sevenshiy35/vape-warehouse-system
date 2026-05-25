@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
+import { useFeedback } from '@/components/FeedbackProvider'
 
 type Product = {
   id: string
@@ -23,6 +24,7 @@ type Props = {
 
 export default function InboundForm({ products }: Props) {
   const router = useRouter()
+  const { confirm, notify } = useFeedback()
 
   const [productId, setProductId] = useState('')
   const [qty, setQty] = useState(1)
@@ -45,21 +47,29 @@ export default function InboundForm({ products }: Props) {
     e.preventDefault()
 
     if (!productId) {
-      alert('请选择商品')
+      notify({ type: 'warning', title: '请选择商品' })
       return
     }
 
     if (!qty || qty <= 0) {
-      alert('请输入正确的入库数量')
+      notify({ type: 'warning', title: '请输入正确的入库数量' })
       return
     }
 
     if (!selectedInventory?.shelf_location && !shelfLocation.trim()) {
-      alert('这个商品当前没有库位，请填写新库位')
+      notify({
+        type: 'warning',
+        title: '这个商品当前没有库位，请填写新库位',
+      })
       return
     }
 
-    const ok = window.confirm('确认入库吗？确认后库存会增加，并写入库存流水。')
+    const ok = await confirm({
+      title: '确认入库？',
+      message: '确认后库存会增加，并写入库存流水。',
+      confirmText: '确认入库',
+      tone: 'success',
+    })
     if (!ok) return
 
     setLoading(true)
@@ -81,11 +91,15 @@ export default function InboundForm({ products }: Props) {
     setLoading(false)
 
     if (!res.ok) {
-      alert('入库失败：' + data.error)
+      notify({
+        type: 'error',
+        title: '入库失败',
+        message: data.error,
+      })
       return
     }
 
-    alert('入库成功')
+    notify({ type: 'success', title: '入库成功' })
     setProductId('')
     setQty(1)
     setShelfLocation('')
