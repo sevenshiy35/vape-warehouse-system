@@ -4,22 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
 import { useFeedback } from '@/components/FeedbackProvider'
-
-type Product = {
-  id: string
-  sku: string
-  brand: string
-  product_name_cn: string
-  product_name_en: string | null
-  display_name: string | null
-  inventory?: {
-    shelf_location: string | null
-    quantity_on_hand: number
-  } | null
-}
+import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
 
 type Props = {
-  products: Product[]
+  products: ProductWithInventory[]
 }
 
 export default function LocationMoveForm({ products }: Props) {
@@ -35,9 +23,7 @@ export default function LocationMoveForm({ products }: Props) {
   const selectedProduct = products.find((p) => p.id === productId)
 
   const selectedInventory = selectedProduct
-    ? Array.isArray((selectedProduct as any).inventory)
-      ? (selectedProduct as any).inventory[0]
-      : (selectedProduct as any).inventory
+    ? getInventoryRecord(selectedProduct)
     : null
 
   const currentQty = Number(selectedInventory?.quantity_on_hand || 0)

@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import InboundForm from '@/components/InboundForm'
 import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
+import type { ProductWithInventory } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ export default async function AdminInboundPage() {
         }
       />
 
-        <InboundForm products={(products || []) as any} />
+        <InboundForm products={(products || []) as ProductWithInventory[]} />
     </PageShell>
   )
 }

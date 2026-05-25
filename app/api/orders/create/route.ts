@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -123,9 +124,9 @@ export async function POST(request: Request) {
       success: true,
       order,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || '创建订单失败' },
+      { error: getErrorMessage(error, '创建订单失败') },
       { status: 500 }
     )
   }

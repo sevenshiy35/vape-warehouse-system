@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import CorrectionForm from '@/components/CorrectionForm'
 import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
+import type { ProductWithInventory } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ export default async function AdminCorrectionPage() {
         }
       />
 
-        <CorrectionForm products={(products || []) as any} />
+        <CorrectionForm products={(products || []) as ProductWithInventory[]} />
     </PageShell>
   )
 }

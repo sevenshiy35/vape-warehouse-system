@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import AddOrderItemForm from '@/components/AddOrderItemForm'
 import ConfirmOrderButton from '@/components/ConfirmOrderButton'
@@ -10,6 +11,7 @@ import EditOrderInfoButton from '@/components/EditOrderInfoButton'
 import RecognizeOrderButton from '@/components/RecognizeOrderButton'
 import AddOrderImagesButton from '@/components/AddOrderImagesButton'
 import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
+import type { ProductWithInventory } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -302,9 +304,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
                       </a>
                     </div>
 
-                    <img
+                    <Image
                       src={image.url}
                       alt={`Order image ${index + 1}`}
+                      width={1200}
+                      height={1600}
+                      unoptimized
                       className="w-full rounded border border-gray-200 dark:border-gray-700"
                     />
 
@@ -372,7 +377,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                   </thead>
 
                   <tbody>
-                    {items.map((item: any) => (
+                    {(items as OrderItem[]).map((item) => (
                       <tr
                         key={item.id}
                         className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
@@ -431,7 +436,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                               itemId={item.id}
                               orderStatus={order.status}
                               currentQty={item.recognized_qty}
-                              currentUnit={item.recognized_unit}
+                              currentUnit={item.recognized_unit || '支'}
                             />
 
                             <DeleteOrderItemButton
@@ -457,10 +462,27 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <AddOrderItemForm
               orderId={order.id}
-              products={(products || []) as any}
+              products={(products || []) as ProductWithInventory[]}
             />
           </section>
         </div>
     </PageShell>
   )
+}
+
+type OrderItem = {
+  id: string
+  sku_snapshot: string | null
+  brand_snapshot: string | null
+  product_name_cn_snapshot: string | null
+  product_name_en_snapshot: string | null
+  display_name_snapshot: string | null
+  recognized_qty: number
+  recognized_unit: string | null
+  pick_qty: number
+  shelf_location_snapshot: string | null
+  before_qty: number | null
+  after_qty: number | null
+  match_status: string
+  created_at: string | null
 }

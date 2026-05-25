@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { zodResponseFormat } from 'openai/helpers/zod'
 import { openai } from '@/lib/openai'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -40,6 +41,19 @@ type ProductRow = {
       }[]
     | null
 }
+
+type OrderRecognitionContent =
+  | {
+      type: 'text'
+      text: string
+    }
+  | {
+      type: 'image_url'
+      image_url: {
+        url: string
+        detail: 'high'
+      }
+    }
 
 function getMimeType(path: string, fallback?: string) {
   if (fallback && fallback !== 'application/octet-stream') {
@@ -100,8 +114,6 @@ function scoreProductByDisplayName(item: RecognizedItem, product: ProductRow) {
   const productDisplay = normalizeText(product.display_name)
   const productDisplayCompact = compactText(product.display_name)
 
-  const cn = normalizeText(product.product_name_cn)
-  const en = normalizeText(product.product_name_en)
   const sku = normalizeText(product.sku)
   const brand = normalizeText(product.brand)
 
@@ -390,7 +402,7 @@ export async function POST(request: Request) {
       imagePaths.map((imagePath) => downloadImageAsDataUrl(imagePath))
     )
 
-    const userContent: any[] = [
+    const userContent: OrderRecognitionContent[] = [
       {
         type: 'text',
         text: `
@@ -480,10 +492,10 @@ export async function POST(request: Request) {
       orderNo: order.order_no,
       result,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
-        error: error.message || 'AI识别失败',
+        error: getErrorMessage(error, 'AI识别失败'),
       },
       { status: 500 }
     )

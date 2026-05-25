@@ -1,24 +1,12 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import {
+  getInventoryRecord,
+  type ProductWithInventory,
+} from '@/lib/types'
 
-type InventoryProduct = {
-  id: string
-  sku: string
-  brand: string
-  source_sheet: string | null
-  product_name_cn: string
-  display_name: string | null
-  product_name_en: string | null
-  inventory?: {
-    shelf_location: string | null
-    quantity_on_hand: number
-    loose_quantity: number | null
-    box_quantity: number | null
-    low_stock_threshold: number | null
-    updated_at: string | null
-  } | null
-}
+type InventoryProduct = ProductWithInventory
 
 type Props = {
   products: InventoryProduct[]
@@ -38,14 +26,8 @@ type SortKey =
 
 type SortDirection = 'asc' | 'desc'
 
-function getInventory(product: any) {
-  return Array.isArray(product.inventory)
-    ? product.inventory[0]
-    : product.inventory
-}
-
 function getStatus(product: InventoryProduct) {
-  const inv = getInventory(product)
+  const inv = getInventoryRecord(product)
   const quantity = Number(inv?.quantity_on_hand || 0)
   const threshold = Number(inv?.low_stock_threshold || 3)
   const shelfLocation = inv?.shelf_location || ''
@@ -57,7 +39,7 @@ function getStatus(product: InventoryProduct) {
 }
 
 function getSortValue(product: InventoryProduct, key: SortKey) {
-  const inv = getInventory(product)
+  const inv = getInventoryRecord(product)
 
   if (key === 'shelf_location') {
     return inv?.shelf_location || null
@@ -152,7 +134,7 @@ export default function InventoryTable({ products }: Props) {
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const inv = getInventory(product)
+      const inv = getInventoryRecord(product)
       const status = getStatus(product)
 
       const keyword = search.trim().toLowerCase()
@@ -219,7 +201,7 @@ export default function InventoryTable({ products }: Props) {
   }, [filteredProducts, sortKey, sortDirection])
 
   const totalStock = sortedProducts.reduce((sum, product) => {
-    const inv = getInventory(product)
+    const inv = getInventoryRecord(product)
     return sum + Number(inv?.quantity_on_hand || 0)
   }, 0)
 
@@ -367,7 +349,7 @@ export default function InventoryTable({ products }: Props) {
               </tr>
             ) : (
               sortedProducts.map((product) => {
-                const inv = getInventory(product)
+                const inv = getInventoryRecord(product)
                 const quantity = Number(inv?.quantity_on_hand || 0)
                 const status = getStatus(product)
                 const shelfLocation = inv?.shelf_location || ''

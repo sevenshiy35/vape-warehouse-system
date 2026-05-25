@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getErrorMessage } from '@/lib/errors'
 
 type CreatedOrder = {
   id: string
@@ -87,8 +88,8 @@ export default function SubmitOrderPage() {
       setCreatedOrder(data.order)
       clearForm()
       router.refresh()
-    } catch (err: any) {
-      setError(err.message || '上传订单失败')
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, '上传订单失败'))
     } finally {
       setLoading(false)
     }

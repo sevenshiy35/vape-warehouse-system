@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import InventoryTable from '@/components/InventoryTable'
 import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
+import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,10 +42,8 @@ export default async function AdminInventoryPage() {
   const totalProducts = products?.length || 0
 
   const totalStock =
-    products?.reduce((sum: number, item: any) => {
-      const inv = Array.isArray(item.inventory)
-        ? item.inventory[0]
-        : item.inventory
+    (products as ProductWithInventory[] | null)?.reduce((sum, item) => {
+      const inv = getInventoryRecord(item)
 
       return sum + Number(inv?.quantity_on_hand || 0)
     }, 0) || 0
@@ -68,7 +67,7 @@ export default async function AdminInventoryPage() {
         }
       />
 
-      <InventoryTable products={(products || []) as any} />
+      <InventoryTable products={(products || []) as ProductWithInventory[]} />
     </PageShell>
   )
 }

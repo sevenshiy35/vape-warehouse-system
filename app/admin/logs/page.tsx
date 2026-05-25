@@ -3,6 +3,22 @@ import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome
 
 export const dynamic = 'force-dynamic'
 
+type InventoryLog = {
+  id: string
+  sku_snapshot: string | null
+  product_name_snapshot: string | null
+  change_qty: number | null
+  before_qty: number | null
+  after_qty: number | null
+  log_type: string | null
+  reason: string | null
+  operator: string | null
+  created_at: string | null
+  old_shelf_location: string | null
+  new_shelf_location: string | null
+  orders: { order_no: string | null } | { order_no: string | null }[] | null
+}
+
 export default async function AdminLogsPage() {
   const { data: logs, error } = await supabaseAdmin
     .from('inventory_logs')
@@ -101,7 +117,7 @@ export default async function AdminLogsPage() {
             </thead>
 
             <tbody>
-              {logs.map((log: any) => {
+              {(logs as InventoryLog[]).map((log) => {
                 const change = Number(log.change_qty || 0)
 
                 const changeClass =

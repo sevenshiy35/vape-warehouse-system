@@ -33,6 +33,8 @@ const validSortKeys = new Set([
   'created_at',
 ])
 
+type OrdersTableOrders = Parameters<typeof OrdersTable>[0]['orders']
+
 function cleanSearchText(value: string) {
   return value.replace(/[,()]/g, ' ').replace(/\s+/g, ' ').trim()
 }
@@ -111,7 +113,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
       />
 
         <OrdersTable
-          orders={(orders || []) as any}
+          orders={(orders || []) as OrdersTableOrders}
           filters={{
             q,
             status,

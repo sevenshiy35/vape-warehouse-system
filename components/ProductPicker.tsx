@@ -1,39 +1,22 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-
-type Inventory = {
-  shelf_location: string | null
-  quantity_on_hand: number
-}
-
-type Product = {
-  id: string
-  sku: string
-  brand: string
-  product_name_cn: string
-  product_name_en: string | null
-  display_name: string | null
-  inventory?: Inventory | Inventory[] | null
-}
+import {
+  getInventoryRecord,
+  type ProductWithInventory,
+} from '@/lib/types'
 
 type Props = {
-  products: Product[]
+  products: ProductWithInventory[]
   value: string
   onChange: (productId: string) => void
-  onProductChange?: (product: Product | null) => void
+  onProductChange?: (product: ProductWithInventory | null) => void
   label?: string
 }
 
 const RESULT_LIMIT = 40
 
-function getInventory(product: Product) {
-  return Array.isArray(product.inventory)
-    ? product.inventory[0] || null
-    : product.inventory || null
-}
-
-function getProductTitle(product: Product) {
+function getProductTitle(product: ProductWithInventory) {
   return (
     product.display_name ||
     product.product_name_cn ||
@@ -42,8 +25,8 @@ function getProductTitle(product: Product) {
   )
 }
 
-function getSearchText(product: Product) {
-  const inv = getInventory(product)
+function getSearchText(product: ProductWithInventory) {
+  const inv = getInventoryRecord(product)
 
   return [
     product.sku,
@@ -107,7 +90,7 @@ export default function ProductPicker({
   const inputClass =
     'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500'
 
-  function selectProduct(product: Product) {
+  function selectProduct(product: ProductWithInventory) {
     onChange(product.id)
     onProductChange?.(product)
   }
@@ -215,7 +198,7 @@ export default function ProductPicker({
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-800">
               {visibleProducts.map((product) => {
-                const inv = getInventory(product)
+                const inv = getInventoryRecord(product)
                 const stock = Number(inv?.quantity_on_hand ?? 0)
                 const location = inv?.shelf_location || '无库位'
                 const selected = product.id === value

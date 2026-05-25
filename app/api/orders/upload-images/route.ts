@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -131,9 +132,9 @@ export async function POST(request: Request) {
       order: updatedOrder,
       uploadedPaths,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || '补传截图失败' },
+      { error: getErrorMessage(error, '补传截图失败') },
       { status: 500 }
     )
   }

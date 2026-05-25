@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -30,9 +31,9 @@ export async function POST(request: Request) {
       success: true,
       message: 'Picking edit saved',
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Unexpected error' },
+      { error: getErrorMessage(error, 'Unexpected error') },
       { status: 500 }
     )
   }

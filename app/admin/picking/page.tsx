@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import PickingListClient from '@/components/PickingListClient'
+import PickingListClient, {
+  type PickingOrder,
+} from '@/components/PickingListClient'
 import {
   NavButton,
   PageHeader,
@@ -53,7 +55,7 @@ export default async function PickingPage({ searchParams }: PageProps) {
     )
   }
 
-  const safeOrders = (orders || []) as any[]
+  const safeOrders = (orders || []) as PickingOrder[]
 
   const selectedOrderId = safeOrders.some((order) => order.id === orderIdParam)
     ? orderIdParam

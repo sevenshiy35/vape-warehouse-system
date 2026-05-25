@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { openai } from '@/lib/openai'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -14,11 +15,11 @@ export async function GET() {
       success: true,
       message: response.output_text,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'OpenAI API test failed',
+        error: getErrorMessage(error, 'OpenAI API test failed'),
       },
       { status: 500 }
     )

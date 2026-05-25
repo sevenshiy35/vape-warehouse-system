@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
@@ -26,12 +27,12 @@ export async function GET() {
       message: 'Next.js connected to Supabase successfully',
       data,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
       {
         success: false,
         message: 'Connection test failed',
-        error: error.message,
+        error: getErrorMessage(error, 'Connection test failed'),
       },
       { status: 500 }
     )

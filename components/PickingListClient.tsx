@@ -14,7 +14,7 @@ type OrderItem = {
   shelf_location_snapshot: string | null
 }
 
-type PickingOrder = {
+export type PickingOrder = {
   id: string
   order_no: string
   address: string | null
@@ -54,7 +54,18 @@ export default function PickingListClient({
   const selectedOrder =
     orders.find((order) => order.id === selectedOrderId) || orders[0] || null
 
-  const map = new Map<string, any>()
+  const map = new Map<
+    string,
+    {
+      shelf_location: string
+      sku: string
+      brand: string | null
+      product_name_cn: string | null
+      product_name_en: string | null
+      display_name: string | null
+      total_qty: number
+    }
+  >()
 
   if (selectedOrder) {
     for (const item of selectedOrder.order_items || []) {
@@ -75,7 +86,9 @@ export default function PickingListClient({
       }
 
       const row = map.get(key)
-      row.total_qty += Number(item.pick_qty || 0)
+      if (row) {
+        row.total_qty += Number(item.pick_qty || 0)
+      }
     }
   }
 

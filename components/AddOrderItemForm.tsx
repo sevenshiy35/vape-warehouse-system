@@ -4,23 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductPicker from '@/components/ProductPicker'
 import { useFeedback } from '@/components/FeedbackProvider'
-
-type Product = {
-  id: string
-  sku: string
-  brand: string
-  product_name_cn: string
-  product_name_en: string | null
-  display_name: string | null
-  inventory?: {
-    shelf_location: string | null
-    quantity_on_hand: number
-  } | null
-}
+import type { ProductWithInventory } from '@/lib/types'
 
 type Props = {
   orderId: string
-  products: Product[]
+  products: ProductWithInventory[]
 }
 
 export default function AddOrderItemForm({ orderId, products }: Props) {
