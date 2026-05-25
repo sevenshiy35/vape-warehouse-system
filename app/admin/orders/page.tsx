@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import OrdersTable from '@/components/OrdersTable'
+import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,53 +81,34 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     ascending: dir === 'asc',
   })
 
-  const navButtonClass =
-    'rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800 md:px-5 md:py-2.5 md:text-base'
-
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
-        <h1 className="mb-4 text-2xl font-bold">订单列表</h1>
+      <PageShell>
+        <PageHeader title="订单列表" />
         <p className="text-red-600 dark:text-red-400">
           读取订单失败：{error.message}
         </p>
-      </main>
+      </PageShell>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">订单列表</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 md:text-base">
-              查看所有订单，点 OrderID 可进入订单详情。
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link href="/" className={navButtonClass}>
-              首页
-            </Link>
-
-            <Link href="/submit-order" className={navButtonClass}>
+    <PageShell>
+      <PageHeader
+        title="订单列表"
+        description="查看所有订单，点 OrderID 可进入订单详情。"
+        actions={
+          <>
+            <NavButton href="/">首页</NavButton>
+            <NavButton href="/submit-order" variant="primary">
               提交新订单
-            </Link>
-
-            <Link href="/admin/picking" className={navButtonClass}>
-              拣货列表
-            </Link>
-
-            <Link href="/admin/inventory" className={navButtonClass}>
-              库存列表
-            </Link>
-
-            <Link href="/admin/logs" className={navButtonClass}>
-              库存流水
-            </Link>
-          </div>
-        </div>
+            </NavButton>
+            <NavButton href="/admin/picking">拣货列表</NavButton>
+            <NavButton href="/admin/inventory">库存列表</NavButton>
+            <NavButton href="/admin/logs">库存流水</NavButton>
+          </>
+        }
+      />
 
         <OrdersTable
           orders={(orders || []) as any}
@@ -140,7 +121,6 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
             dir,
           }}
         />
-      </div>
-    </main>
+    </PageShell>
   )
 }

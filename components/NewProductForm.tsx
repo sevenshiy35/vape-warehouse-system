@@ -115,7 +115,7 @@ export default function NewProductForm() {
   return (
     <form
   onSubmit={handleSubmit}
-  className="space-y-5 rounded border border-gray-200 bg-white p-5 text-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+  className="space-y-5 rounded-lg border border-gray-200 bg-white p-5 text-gray-900 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
 >
       <h2 className="text-lg font-semibold">添加新品库存</h2>
 

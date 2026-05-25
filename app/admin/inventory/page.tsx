@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import InventoryTable from '@/components/InventoryTable'
+import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,12 +29,12 @@ export default async function AdminInventoryPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 p-8 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-        <h1 className="mb-4 text-2xl font-bold">库存列表</h1>
+      <PageShell>
+        <PageHeader title="库存列表" />
         <p className="text-red-600 dark:text-red-400">
           读取库存失败：{error.message}
         </p>
-      </main>
+      </PageShell>
     )
   }
 
@@ -50,43 +50,25 @@ export default async function AdminInventoryPage() {
     }, 0) || 0
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">库存列表</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
-            共 {totalProducts} 个商品，总库存 {totalStock}
-          </p>
-        </div>
-
-        <div className="flex gap-4">
-          <Link href="/" className="text-blue-600 hover:underline dark:text-blue-400">
-            首页
-          </Link>
-
-	<Link href="/admin/location-move" className="text-blue-600 hover:underline dark:text-blue-400">
-  库位挪动
-</Link>
-
-          <Link href="/admin/products/new" className="text-blue-600 hover:underline dark:text-blue-400">
-            添加新品
-          </Link>
-
-          <Link href="/admin/inbound" className="text-blue-600 hover:underline dark:text-blue-400">
-            入库
-          </Link>
-
-          <Link href="/admin/correction" className="text-blue-600 hover:underline dark:text-blue-400">
-            库存修正
-          </Link>
-
-          <Link href="/admin/logs" className="text-blue-600 hover:underline dark:text-blue-400">
-            库存流水
-          </Link>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="库存列表"
+        description={`共 ${totalProducts} 个商品，总库存 ${totalStock}`}
+        actions={
+          <>
+            <NavButton href="/">首页</NavButton>
+            <NavButton href="/admin/location-move">库位挪动</NavButton>
+            <NavButton href="/admin/products/new" variant="primary">
+              添加新品
+            </NavButton>
+            <NavButton href="/admin/inbound">入库</NavButton>
+            <NavButton href="/admin/correction">库存修正</NavButton>
+            <NavButton href="/admin/logs">库存流水</NavButton>
+          </>
+        }
+      />
 
       <InventoryTable products={(products || []) as any} />
-    </main>
+    </PageShell>
   )
 }

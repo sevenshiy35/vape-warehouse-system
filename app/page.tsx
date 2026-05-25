@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { PageHeader, PageShell, Panel } from '@/components/PageChrome'
 
 const links = [
   {
@@ -67,14 +68,12 @@ const links = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-50 p-8 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">电子烟仓库管理系统</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            订单上传、库存管理、出库确认、入库、库存修正、库位挪动和库存流水入口
-          </p>
-        </div>
+    <PageShell maxWidth="max-w-5xl">
+      <PageHeader
+        title="电子烟仓库管理系统"
+        description="订单上传、库存管理、出库确认、入库、库存修正、库位挪动和库存流水入口"
+        eyebrow="Warehouse"
+      />
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {links.map((item) => (
@@ -82,7 +81,7 @@ export default function HomePage() {
               key={item.href}
               href={item.href}
               className="
-                rounded-xl border border-gray-200 bg-white p-5 shadow-sm
+                rounded-lg border border-gray-200 bg-white p-5 shadow-sm
                 transition hover:-translate-y-1 hover:shadow-md
                 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/80
               "
@@ -104,7 +103,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+        <Panel className="mt-10">
           <h2 className="mb-3 text-lg font-semibold">日常使用流程</h2>
 
           <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-700 dark:text-gray-300">
@@ -116,8 +115,7 @@ export default function HomePage() {
             <li>收到新货时进入“入库”；盘点错误时进入“库存修正”。</li>
             <li>只调整货架位置时进入“库位挪动”。</li>
           </ol>
-        </div>
-      </div>
-    </main>
+        </Panel>
+    </PageShell>
   )
 }

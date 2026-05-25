@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import AddOrderItemForm from '@/components/AddOrderItemForm'
 import ConfirmOrderButton from '@/components/ConfirmOrderButton'
@@ -10,6 +9,7 @@ import EditOrderItemButton from '@/components/EditOrderItemButton'
 import EditOrderInfoButton from '@/components/EditOrderInfoButton'
 import RecognizeOrderButton from '@/components/RecognizeOrderButton'
 import AddOrderImagesButton from '@/components/AddOrderImagesButton'
+import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,20 +32,17 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   if (error || !order) {
     return (
-      <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
-        <Link
-          href="/admin/orders"
-          className="text-blue-600 hover:underline dark:text-blue-400"
-        >
-          ← 返回订单列表
-        </Link>
+      <PageShell>
+        <div className="mb-4">
+          <NavButton href="/admin/orders">返回订单列表</NavButton>
+        </div>
 
-        <h1 className="mt-6 mb-4 text-2xl font-bold">订单详情</h1>
+        <PageHeader title="订单详情" />
 
         <p className="text-red-600 dark:text-red-400">
           读取订单失败：{error?.message || 'Order not found'}
         </p>
-      </main>
+      </PageShell>
     )
   }
 
@@ -138,6 +135,16 @@ export default async function OrderDetailPage({ params }: PageProps) {
     return 'inline-block rounded bg-blue-100 px-2 py-1 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
   }
 
+  function getOrderStatusLabel(status: string) {
+    if (status === 'uploaded') return '已上传'
+    if (status === 'need_review') return '待确认'
+    if (status === 'picking') return '拣货中'
+    if (status === 'picking_editing') return '拣货修改中'
+    if (status === 'completed') return '已完成'
+    if (status === 'cancelled') return '已取消'
+    return status
+  }
+
   function getItemStatusClass(status: string) {
     if (status === 'matched') {
       return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
@@ -154,25 +161,25 @@ export default async function OrderDetailPage({ params }: PageProps) {
     return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
 
+  function getItemStatusLabel(status: string) {
+    if (status === 'matched') return '已匹配'
+    if (status === 'out_of_stock') return '库存不足'
+    if (status === 'need_review') return '需确认'
+    if (status === 'not_found') return '未匹配'
+    return status
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
-      <div className="mx-auto max-w-6xl">
-        <Link
-          href="/admin/orders"
-          className="text-blue-600 hover:underline dark:text-blue-400"
-        >
-          ← 返回订单列表
-        </Link>
+    <PageShell>
+      <div className="mb-4">
+        <NavButton href="/admin/orders">返回订单列表</NavButton>
+      </div>
 
-        <div className="mt-6 mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">订单详情</h1>
-            <p className="mt-1 text-gray-500 dark:text-gray-400">
-              OrderID: {order.order_no}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
+      <PageHeader
+        title="订单详情"
+        description={`OrderID: ${order.order_no}`}
+        actions={
+          <>
             <RecognizeOrderButton orderId={order.id} status={order.status} />
 
             <EditOrderInfoButton
@@ -200,11 +207,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
             )}
 
             <CancelOrderButton orderId={order.id} status={order.status} />
-          </div>
-        </div>
+          </>
+        }
+      />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <Panel>
             <h2 className="mb-4 text-lg font-semibold">订单信息</h2>
 
             <div className="space-y-3 text-sm">
@@ -236,7 +244,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div>
                 <p className="text-gray-500 dark:text-gray-400">状态</p>
                 <span className={getOrderStatusClass(order.status)}>
-                  {order.status}
+                  {getOrderStatusLabel(order.status)}
                 </span>
               </div>
 
@@ -254,9 +262,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </p>
               </div>
             </div>
-          </section>
+          </Panel>
 
-          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <Panel>
             <div className="mb-4 flex items-center justify-between gap-3">
   <h2 className="text-lg font-semibold">订单截图</h2>
 
@@ -311,11 +319,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 没有找到订单图片
               </p>
             )}
-          </section>
+          </Panel>
         </div>
 
         <div className="mt-6 space-y-6">
-          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <Panel>
             <h2 className="mb-4 text-lg font-semibold">订单商品明细</h2>
 
             {itemsError && (
@@ -413,7 +421,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                               item.match_status
                             )}`}
                           >
-                            {item.match_status}
+                            {getItemStatusLabel(item.match_status)}
                           </span>
                         </td>
 
@@ -438,7 +446,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </table>
               </div>
             )}
-          </section>
+          </Panel>
 
           <section className="max-w-2xl">
             {productsError && (
@@ -453,7 +461,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
             />
           </section>
         </div>
-      </div>
-    </main>
+    </PageShell>
   )
 }

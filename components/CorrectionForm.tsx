@@ -104,7 +104,7 @@ export default function CorrectionForm({ products }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded border border-gray-200 bg-white p-5 text-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
+      className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 text-gray-900 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
     >
       <h2 className="text-lg font-semibold">库存盘点修正</h2>
 
@@ -125,7 +125,7 @@ export default function CorrectionForm({ products }: Props) {
 />
 
       {selectedProduct && (
-        <div className="space-y-1 rounded border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-300">
+        <div className="space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300">
           <p>
             <span className="text-gray-500 dark:text-gray-400">当前商品：</span>
             {selectedProduct.brand} | {selectedProduct.sku} |{' '}

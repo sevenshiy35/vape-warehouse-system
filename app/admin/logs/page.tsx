@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,76 +27,40 @@ export default async function AdminLogsPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 p-8 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-        <h1 className="mb-4 text-2xl font-bold">库存流水</h1>
+      <PageShell>
+        <PageHeader title="库存流水" />
         <p className="text-red-600 dark:text-red-400">
           读取库存流水失败：{error.message}
         </p>
-      </main>
+      </PageShell>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">库存流水</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
-            查看所有出库、入库、盘点修正、库位挪动记录
-          </p>
-        </div>
-
-        <div className="flex gap-4">
-          <Link
-            href="/"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            首页
-          </Link>
-
-          <Link
-            href="/admin/orders"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            订单列表
-          </Link>
-
-          <Link
-            href="/admin/inventory"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            库存列表
-          </Link>
-
-          <Link
-            href="/admin/inbound"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            入库
-          </Link>
-
-          <Link
-            href="/admin/correction"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            库存修正
-          </Link>
-
-          <Link
-            href="/admin/location-move"
-            className="text-blue-600 hover:underline dark:text-blue-400"
-          >
-            库位挪动
-          </Link>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="库存流水"
+        description="查看所有出库、入库、盘点修正、库位挪动记录"
+        actions={
+          <>
+            <NavButton href="/">首页</NavButton>
+            <NavButton href="/admin/orders">订单列表</NavButton>
+            <NavButton href="/admin/inventory" variant="primary">
+              库存列表
+            </NavButton>
+            <NavButton href="/admin/inbound">入库</NavButton>
+            <NavButton href="/admin/correction">库存修正</NavButton>
+            <NavButton href="/admin/location-move">库位挪动</NavButton>
+          </>
+        }
+      />
 
       {!logs || logs.length === 0 ? (
-        <div className="rounded border border-gray-200 bg-white p-6 text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+        <Panel className="text-gray-500 dark:text-gray-400">
           暂无库存流水
-        </div>
+        </Panel>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <table className="w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
@@ -239,6 +203,6 @@ export default async function AdminLogsPage() {
           </table>
         </div>
       )}
-    </main>
+    </PageShell>
   )
 }

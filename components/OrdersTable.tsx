@@ -28,12 +28,12 @@ type Props = {
 
 const statusOptions = [
   { value: '全部', label: '全部' },
-  { value: 'uploaded', label: 'uploaded' },
-  { value: 'need_review', label: 'need_review' },
-  { value: 'picking', label: 'picking' },
-  { value: 'picking_editing', label: 'picking_editing' },
-  { value: 'completed', label: 'completed' },
-  { value: 'cancelled', label: 'cancelled' },
+  { value: 'uploaded', label: '已上传' },
+  { value: 'need_review', label: '待确认' },
+  { value: 'picking', label: '拣货中' },
+  { value: 'picking_editing', label: '拣货修改中' },
+  { value: 'completed', label: '已完成' },
+  { value: 'cancelled', label: '已取消' },
 ]
 
 function buildOrdersHref(next: Partial<Filters>) {
@@ -94,6 +94,10 @@ function getStatusClass(status: string) {
   return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
 }
 
+function getStatusLabel(status: string) {
+  return statusOptions.find((item) => item.value === status)?.label || status
+}
+
 function getImageCount(order: Order) {
   if (Array.isArray(order.image_paths) && order.image_paths.length > 0) {
     return order.image_paths.length
@@ -137,7 +141,7 @@ export default function OrdersTable({ orders, filters }: Props) {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <form method="get" action="/admin/orders" className="space-y-4">
           <input type="hidden" name="sort" value={filters.sort} />
           <input type="hidden" name="dir" value={filters.dir} />
@@ -249,7 +253,7 @@ export default function OrdersTable({ orders, filters }: Props) {
       {/* 手机端卡片 */}
       <div className="space-y-3 md:hidden">
         {orders.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 text-center text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
             没有符合条件的订单
           </div>
         ) : (
@@ -257,7 +261,7 @@ export default function OrdersTable({ orders, filters }: Props) {
             <Link
               key={order.id}
               href={`/admin/orders/${order.id}`}
-              className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition active:scale-[0.99] dark:border-gray-800 dark:bg-gray-900"
+              className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition active:scale-[0.99] dark:border-gray-800 dark:bg-gray-900"
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
@@ -277,7 +281,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                     order.status
                   )}`}
                 >
-                  {order.status}
+                  {getStatusLabel(order.status)}
                 </span>
               </div>
 
@@ -330,7 +334,7 @@ export default function OrdersTable({ orders, filters }: Props) {
       </div>
 
       {/* 电脑端表格 */}
-      <div className="hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
+      <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
         <table className="w-full min-w-[980px] text-sm">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
@@ -400,11 +404,11 @@ export default function OrdersTable({ orders, filters }: Props) {
                   <td className="border-b border-gray-200 p-3 dark:border-gray-800">
                     <span
                       className={`rounded px-2 py-1 text-xs font-medium ${getStatusClass(
-                        order.status
-                      )}`}
-                    >
-                      {order.status}
-                    </span>
+                      order.status
+                    )}`}
+                  >
+                    {getStatusLabel(order.status)}
+                  </span>
                   </td>
 
                   <td className="border-b border-gray-200 p-3 dark:border-gray-800">

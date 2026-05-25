@@ -100,7 +100,7 @@ export default function PickingListClient({
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <p className="text-gray-500 dark:text-gray-400">
           暂无拣货中订单。
         </p>
@@ -112,7 +112,7 @@ export default function PickingListClient({
     <div className="space-y-6 pb-28 md:pb-0">
       <section
         id="order-selector"
-        className="scroll-mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5"
+        className="scroll-mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5"
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
@@ -148,7 +148,7 @@ export default function PickingListClient({
                   <Link
                     key={order.id}
                     href={getPickingHref(order.id)}
-                    className={`block w-full rounded-xl border p-3 text-left transition active:scale-[0.99] ${
+                    className={`block w-full rounded-lg border p-3 text-left transition active:scale-[0.99] ${
                       isActive
                         ? 'border-blue-500 bg-blue-50 dark:border-blue-600 dark:bg-blue-950/40'
                         : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950'
@@ -192,7 +192,7 @@ export default function PickingListClient({
         </div>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5">
+      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">本单拣货列表</h2>
@@ -217,7 +217,7 @@ export default function PickingListClient({
           </p>
         ) : (
           <>
-            <div className="hidden overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 md:block">
+            <div className="hidden overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 md:block">
               <table className="w-full min-w-[850px] text-sm">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
@@ -286,10 +286,10 @@ export default function PickingListClient({
   {pickingRows.map((row) => (
     <div
       key={`${row.shelf_location}-${row.sku}`}
-      className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950"
+      className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950"
     >
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border-2 border-gray-300 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="rounded-lg border-2 border-gray-300 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
             库位
           </p>
@@ -298,7 +298,7 @@ export default function PickingListClient({
           </p>
         </div>
 
-        <div className="rounded-xl border-2 border-blue-400 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-950/40">
+        <div className="rounded-lg border-2 border-blue-400 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-950/40">
           <p className="text-sm font-medium text-blue-600 dark:text-blue-300">
             数量
           </p>
@@ -346,7 +346,7 @@ export default function PickingListClient({
         )}
 
         {selectedOrder && (
-          <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
+          <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950">
             <h3 className="mb-3 text-base font-semibold">本单配送信息</h3>
 
             <div className="space-y-3 text-sm">
@@ -376,7 +376,7 @@ export default function PickingListClient({
         )}
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5">
+      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5">
         <h2 className="mb-4 text-lg font-semibold">所有拣货中订单</h2>
 
         <div className="space-y-3">
@@ -392,7 +392,7 @@ export default function PickingListClient({
               <Link
                 key={order.id}
                 href={getPickingHref(order.id)}
-                className={`block w-full rounded-xl border p-4 text-left transition active:scale-[0.99] ${
+                className={`block w-full rounded-lg border p-4 text-left transition active:scale-[0.99] ${
                   isActive
                     ? 'border-blue-500 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30'
                     : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-950'
