@@ -1,0 +1,459 @@
+import Link from 'next/link'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import AddOrderItemForm from '@/components/AddOrderItemForm'
+import ConfirmOrderButton from '@/components/ConfirmOrderButton'
+import CompletePickingButton from '@/components/CompletePickingButton'
+import SavePickingEditButton from '@/components/SavePickingEditButton'
+import CancelOrderButton from '@/components/CancelOrderButton'
+import DeleteOrderItemButton from '@/components/DeleteOrderItemButton'
+import EditOrderItemButton from '@/components/EditOrderItemButton'
+import EditOrderInfoButton from '@/components/EditOrderInfoButton'
+import RecognizeOrderButton from '@/components/RecognizeOrderButton'
+import AddOrderImagesButton from '@/components/AddOrderImagesButton'
+
+export const dynamic = 'force-dynamic'
+
+type PageProps = {
+  params: Promise<{
+    id: string
+  }>
+}
+
+export default async function OrderDetailPage({ params }: PageProps) {
+  const { id } = await params
+
+  const { data: order, error } = await supabaseAdmin
+    .from('orders')
+    .select(
+      'id, order_no, order_type, customer_name, address, note, status, image_path, image_paths, created_at'
+    )
+    .eq('id', id)
+    .single()
+
+  if (error || !order) {
+    return (
+      <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
+        <Link
+          href="/admin/orders"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          ← 返回订单列表
+        </Link>
+
+        <h1 className="mt-6 mb-4 text-2xl font-bold">订单详情</h1>
+
+        <p className="text-red-600 dark:text-red-400">
+          读取订单失败：{error?.message || 'Order not found'}
+        </p>
+      </main>
+    )
+  }
+
+  const { data: items, error: itemsError } = await supabaseAdmin
+    .from('order_items')
+    .select(`
+      id,
+      sku_snapshot,
+      brand_snapshot,
+      product_name_cn_snapshot,
+      product_name_en_snapshot,
+      display_name_snapshot,
+      recognized_qty,
+      recognized_unit,
+      pick_qty,
+      shelf_location_snapshot,
+      before_qty,
+      after_qty,
+      match_status,
+      created_at
+    `)
+    .eq('order_id', id)
+    .order('created_at', { ascending: true })
+
+  const { data: products, error: productsError } = await supabaseAdmin
+    .from('products')
+    .select(`
+      id,
+      sku,
+      brand,
+      product_name_cn,
+      product_name_en,
+      display_name,
+      inventory (
+        shelf_location,
+        quantity_on_hand
+      )
+    `)
+    .eq('is_active', true)
+    .order('brand', { ascending: true })
+    .order('sku', { ascending: true })
+
+  const imagePaths =
+    Array.isArray(order.image_paths) && order.image_paths.length > 0
+      ? order.image_paths.filter(Boolean)
+      : order.image_path
+      ? [order.image_path]
+      : []
+
+  const signedImageUrls: {
+    path: string
+    url: string
+  }[] = []
+
+  for (const imagePath of imagePaths) {
+    const { data: signedData, error: signedError } =
+      await supabaseAdmin.storage
+        .from('order-images')
+        .createSignedUrl(imagePath, 60 * 10)
+
+    if (!signedError && signedData?.signedUrl) {
+      signedImageUrls.push({
+        path: imagePath,
+        url: signedData.signedUrl,
+      })
+    }
+  }
+
+  function getOrderStatusClass(status: string) {
+    if (status === 'completed') {
+      return 'inline-block rounded bg-green-100 px-2 py-1 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+    }
+
+    if (status === 'picking') {
+      return 'inline-block rounded bg-orange-100 px-2 py-1 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300'
+    }
+
+    if (status === 'picking_editing') {
+      return 'inline-block rounded bg-purple-100 px-2 py-1 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300'
+    }
+
+    if (status === 'need_review') {
+      return 'inline-block rounded bg-yellow-100 px-2 py-1 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+    }
+
+    if (status === 'cancelled') {
+      return 'inline-block rounded bg-red-100 px-2 py-1 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+    }
+
+    return 'inline-block rounded bg-blue-100 px-2 py-1 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+  }
+
+  function getItemStatusClass(status: string) {
+    if (status === 'matched') {
+      return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+    }
+
+    if (status === 'out_of_stock') {
+      return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+    }
+
+    if (status === 'need_review') {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+    }
+
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-50 p-4 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:p-8">
+      <div className="mx-auto max-w-6xl">
+        <Link
+          href="/admin/orders"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          ← 返回订单列表
+        </Link>
+
+        <div className="mt-6 mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">订单详情</h1>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
+              OrderID: {order.order_no}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <RecognizeOrderButton orderId={order.id} status={order.status} />
+
+            <EditOrderInfoButton
+              orderId={order.id}
+              status={order.status}
+              currentCustomerName={order.customer_name}
+              currentAddress={order.address}
+              currentNote={order.note}
+            />
+
+            <ConfirmOrderButton orderId={order.id} status={order.status} />
+
+            {order.status === 'picking' && (
+              <CompletePickingButton
+                orderId={order.id}
+                status={order.status}
+              />
+            )}
+
+            {order.status === 'picking_editing' && (
+              <SavePickingEditButton
+                orderId={order.id}
+                status={order.status}
+              />
+            )}
+
+            <CancelOrderButton orderId={order.id} status={order.status} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+            <h2 className="mb-4 text-lg font-semibold">订单信息</h2>
+
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">OrderID</p>
+                <p className="font-medium">{order.order_no}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">订单类型</p>
+                <p>{order.order_type || 'order'}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">客户名</p>
+                <p>{order.customer_name || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">地址</p>
+                <p>{order.address || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">备注</p>
+                <p>{order.note || '-'}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">状态</p>
+                <span className={getOrderStatusClass(order.status)}>
+                  {order.status}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">订单截图数量</p>
+                <p>{imagePaths.length}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">创建时间</p>
+                <p>
+                  {order.created_at
+                    ? new Date(order.created_at).toLocaleString()
+                    : '-'}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+            <div className="mb-4 flex items-center justify-between gap-3">
+  <h2 className="text-lg font-semibold">订单截图</h2>
+
+  <div className="flex items-center gap-3">
+    <span className="text-sm text-gray-500 dark:text-gray-400">
+      共 {signedImageUrls.length} 张
+    </span>
+
+    <AddOrderImagesButton
+      orderId={order.id}
+      status={order.status}
+    />
+  </div>
+</div>
+
+            {signedImageUrls.length > 0 ? (
+              <div className="space-y-5">
+                {signedImageUrls.map((image, index) => (
+                  <div
+                    key={image.path}
+                    className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        截图 {index + 1}
+                      </p>
+
+                      <a
+                        href={image.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        打开原图
+                      </a>
+                    </div>
+
+                    <img
+                      src={image.url}
+                      alt={`Order image ${index + 1}`}
+                      className="w-full rounded border border-gray-200 dark:border-gray-700"
+                    />
+
+                    <p className="mt-2 break-all text-xs text-gray-400 dark:text-gray-500">
+                      {image.path}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">
+                没有找到订单图片
+              </p>
+            )}
+          </section>
+        </div>
+
+        <div className="mt-6 space-y-6">
+          <section className="rounded border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+            <h2 className="mb-4 text-lg font-semibold">订单商品明细</h2>
+
+            {itemsError && (
+              <p className="mb-3 text-red-600 dark:text-red-400">
+                读取商品明细失败：{itemsError.message}
+              </p>
+            )}
+
+            {!items || items.length === 0 ? (
+              <p className="text-gray-500 dark:text-gray-400">
+                这个订单还没有商品
+              </p>
+            ) : (
+              <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-800">
+                <table className="w-full min-w-[980px] text-xs">
+                  <thead className="bg-gray-100 dark:bg-gray-800">
+                    <tr>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        品牌
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        SKU
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        品名
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        识别数量
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        拣货数量
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        库位
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        库存变化
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        状态
+                      </th>
+                      <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                        操作
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {items.map((item: any) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                      >
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                          {item.brand_snapshot || '-'}
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                          {item.sku_snapshot || '-'}
+                        </td>
+
+                        <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                          <div className="min-w-[150px]">
+                            <div className="font-medium">
+                              {item.product_name_cn_snapshot || '-'}
+                            </div>
+
+                            {item.product_name_en_snapshot && (
+                              <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                {item.product_name_en_snapshot}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                          {item.recognized_qty} {item.recognized_unit}
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                          {item.pick_qty}
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                          {item.shelf_location_snapshot || '需要确认'}
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                          {item.before_qty ?? '-'} → {item.after_qty ?? '-'}
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                          <span
+                            className={`rounded px-2 py-1 ${getItemStatusClass(
+                              item.match_status
+                            )}`}
+                          >
+                            {item.match_status}
+                          </span>
+                        </td>
+
+                        <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                          <div className="flex items-center gap-2">
+                            <EditOrderItemButton
+                              itemId={item.id}
+                              orderStatus={order.status}
+                              currentQty={item.recognized_qty}
+                              currentUnit={item.recognized_unit}
+                            />
+
+                            <DeleteOrderItemButton
+                              itemId={item.id}
+                              orderStatus={order.status}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="max-w-2xl">
+            {productsError && (
+              <p className="mb-3 text-red-600 dark:text-red-400">
+                读取商品列表失败：{productsError.message}
+              </p>
+            )}
+
+            <AddOrderItemForm
+              orderId={order.id}
+              products={(products || []) as any}
+            />
+          </section>
+        </div>
+      </div>
+    </main>
+  )
+}
