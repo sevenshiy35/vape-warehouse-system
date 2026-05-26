@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   getInventoryRecord,
   type ProductWithInventory,
@@ -29,6 +30,23 @@ type SortDirection = 'asc' | 'desc'
 const statusFilters = ['全部', 'OK', '低库存', '无库存', '缺少库位'] as const
 
 type InventoryStatusFilter = (typeof statusFilters)[number]
+
+type InventoryFilterState = {
+  q: string
+  brand: string
+  status: InventoryStatusFilter
+  location: string
+}
+
+function normalizeBrand(brand: string | null | undefined) {
+  return String(brand || '').trim()
+}
+
+function getQueryStatus(value: string | null): InventoryStatusFilter {
+  return statusFilters.includes(value as InventoryStatusFilter)
+    ? (value as InventoryStatusFilter)
+    : '全部'
+}
 
 function getStatus(product: InventoryProduct) {
   const inv = getInventoryRecord(product)
@@ -110,22 +128,108 @@ function SortHeader({
 }
 
 export default function InventoryTable({ products }: Props) {
-  const [search, setSearch] = useState('')
-  const [brandFilter, setBrandFilter] = useState('全部')
-  const [statusFilter, setStatusFilter] =
-    useState<InventoryStatusFilter>('全部')
-  const [locationSearch, setLocationSearch] = useState('')
+  const searchParams = useSearchParams()
+  const [search, setSearch] = useState(() => searchParams.get('q') || '')
+  const [brandFilter, setBrandFilter] = useState(
+    () => searchParams.get('brand') || '全部'
+  )
+  const [statusFilter, setStatusFilter] = useState<InventoryStatusFilter>(() =>
+    getQueryStatus(searchParams.get('status'))
+  )
+  const [locationSearch, setLocationSearch] = useState(
+    () => searchParams.get('location') || ''
+  )
 
   const [sortKey, setSortKey] = useState<SortKey>('brand')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const brands = useMemo(() => {
     const unique = Array.from(
-      new Set(products.map((p) => p.brand).filter(Boolean))
+      new Set(products.map((p) => normalizeBrand(p.brand)).filter(Boolean))
     )
 
-    return ['全部', ...unique.sort()]
+    return [
+      '全部',
+      ...unique.sort((a, b) =>
+        a.localeCompare(b, 'zh-Hans', {
+          numeric: true,
+          sensitivity: 'base',
+        })
+      ),
+    ]
   }, [products])
+
+  function syncFilterUrl(next: Partial<InventoryFilterState>) {
+    const params = new URLSearchParams(window.location.search)
+
+    const merged: InventoryFilterState = {
+      q: search,
+      brand: brandFilter,
+      status: statusFilter,
+      location: locationSearch,
+      ...next,
+    }
+
+    const values = {
+      q: merged.q.trim(),
+      brand: merged.brand.trim(),
+      status: merged.status,
+      location: merged.location.trim(),
+    }
+
+    if (values.q) {
+      params.set('q', values.q)
+    } else {
+      params.delete('q')
+    }
+
+    if (values.brand && values.brand !== '全部') {
+      params.set('brand', values.brand)
+    } else {
+      params.delete('brand')
+    }
+
+    if (values.status !== '全部') {
+      params.set('status', values.status)
+    } else {
+      params.delete('status')
+    }
+
+    if (values.location) {
+      params.set('location', values.location)
+    } else {
+      params.delete('location')
+    }
+
+    const query = params.toString()
+    window.history.replaceState(
+      null,
+      '',
+      query ? `/admin/inventory?${query}` : '/admin/inventory'
+    )
+  }
+
+  function updateSearch(nextSearch: string) {
+    setSearch(nextSearch)
+    syncFilterUrl({ q: nextSearch })
+  }
+
+  function updateBrandFilter(nextBrand: string) {
+    setBrandFilter(nextBrand)
+    setSortKey('brand')
+    setSortDirection('asc')
+    syncFilterUrl({ brand: nextBrand })
+  }
+
+  function updateStatusFilter(nextStatus: InventoryStatusFilter) {
+    setStatusFilter(nextStatus)
+    syncFilterUrl({ status: nextStatus })
+  }
+
+  function updateLocationSearch(nextLocation: string) {
+    setLocationSearch(nextLocation)
+    syncFilterUrl({ location: nextLocation })
+  }
 
   const statusCounts = useMemo(() => {
     const counts: Record<InventoryStatusFilter, number> = {
@@ -185,7 +289,10 @@ export default function InventoryTable({ products }: Props) {
         return false
       }
 
-      if (brandFilter !== '全部' && product.brand !== brandFilter) {
+      if (
+        brandFilter !== '全部' &&
+        normalizeBrand(product.brand) !== brandFilter
+      ) {
         return false
       }
 
@@ -246,6 +353,12 @@ export default function InventoryTable({ products }: Props) {
     setLocationSearch('')
     setSortKey('brand')
     setSortDirection('asc')
+    syncFilterUrl({
+      q: '',
+      brand: '全部',
+      status: '全部',
+      location: '',
+    })
   }
 
   const inputClass =
@@ -262,7 +375,8 @@ export default function InventoryTable({ products }: Props) {
             <input
               className={inputClass}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateSearch(e.target.value)}
+              onInput={(e) => updateSearch(e.currentTarget.value)}
               placeholder="SKU / 中文 / 英文 / 展示名"
             />
           </div>
@@ -274,7 +388,8 @@ export default function InventoryTable({ products }: Props) {
             <select
               className={inputClass}
               value={brandFilter}
-              onChange={(e) => setBrandFilter(e.target.value)}
+              onChange={(e) => updateBrandFilter(e.target.value)}
+              onInput={(e) => updateBrandFilter(e.currentTarget.value)}
             >
               {brands.map((brand) => (
                 <option key={brand} value={brand}>
@@ -292,7 +407,12 @@ export default function InventoryTable({ products }: Props) {
               className={inputClass}
               value={statusFilter}
               onChange={(e) =>
-                setStatusFilter(e.target.value as InventoryStatusFilter)
+                updateStatusFilter(e.target.value as InventoryStatusFilter)
+              }
+              onInput={(e) =>
+                updateStatusFilter(
+                  e.currentTarget.value as InventoryStatusFilter
+                )
               }
             >
               {statusFilters.map((status) => (
@@ -310,7 +430,8 @@ export default function InventoryTable({ products }: Props) {
             <input
               className={inputClass}
               value={locationSearch}
-              onChange={(e) => setLocationSearch(e.target.value)}
+              onChange={(e) => updateLocationSearch(e.target.value)}
+              onInput={(e) => updateLocationSearch(e.currentTarget.value)}
               placeholder="例如 A1 / B2 / SP区"
             />
           </div>
@@ -324,7 +445,7 @@ export default function InventoryTable({ products }: Props) {
               <button
                 key={status}
                 type="button"
-                onClick={() => setStatusFilter(status)}
+                onClick={() => updateStatusFilter(status)}
                 className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-sm font-medium ${
                   active
                     ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
