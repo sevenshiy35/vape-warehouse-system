@@ -152,10 +152,12 @@ export async function POST(request: Request) {
     }
 
     if (!wantsJsonResponse(request)) {
-      return NextResponse.redirect(
-        new URL(`/admin/orders/${order.id}`, request.url),
-        303
-      )
+      return new NextResponse(null, {
+        status: 303,
+        headers: {
+          Location: `/admin/orders/${order.id}`,
+        },
+      })
     }
 
     return NextResponse.json({
