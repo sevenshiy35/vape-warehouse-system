@@ -51,6 +51,11 @@ function getQueryStatus(value: string | null): InventoryStatusFilter {
 function setFormFieldValue(form: HTMLFormElement, name: string, value: string) {
   const field = form.elements.namedItem(name)
 
+  if (field instanceof RadioNodeList) {
+    field.value = value
+    return
+  }
+
   if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
     field.value = value
   }
@@ -243,13 +248,6 @@ export default function InventoryTable({ products }: Props) {
     applyFilters(getFormFilters(event.currentTarget))
   }
 
-  function applyStatusShortcut(status: InventoryStatusFilter) {
-    if (filterFormRef.current) {
-      setFormFieldValue(filterFormRef.current, 'status', status)
-      applyFilters(getFormFilters(filterFormRef.current))
-    }
-  }
-
   const statusCounts = useMemo(() => {
     const counts: Record<InventoryStatusFilter, number> = {
       全部: products.length,
@@ -393,7 +391,7 @@ export default function InventoryTable({ products }: Props) {
         onSubmit={handleFilterSubmit}
         className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
       >
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
               搜索商品
@@ -425,23 +423,6 @@ export default function InventoryTable({ products }: Props) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
-              状态
-            </label>
-            <select
-              name="status"
-              className={inputClass}
-              defaultValue={statusFilter}
-            >
-              {statusFilters.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
               库位
             </label>
             <input
@@ -453,29 +434,44 @@ export default function InventoryTable({ products }: Props) {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <fieldset className="mt-4">
+          <legend className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+            库存状态
+          </legend>
+
+          <div className="flex flex-wrap gap-2">
           {statusFilters.map((status) => {
             const active = statusFilter === status
 
             return (
-              <button
+              <label
                 key={status}
-                type="button"
-                onClick={() => applyStatusShortcut(status)}
-                className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-sm font-medium ${
-                  active
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
-                }`}
+                className="cursor-pointer select-none active:scale-[0.98]"
               >
-                {status}
-                <span className="ml-2 rounded-full bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
-                  {statusCounts[status]}
+                <input
+                  type="radio"
+                  name="status"
+                  value={status}
+                  defaultChecked={status === statusFilter}
+                  className="peer sr-only"
+                />
+                <span
+                  className={`inline-flex min-h-10 items-center justify-center rounded-full border px-3 py-1.5 text-sm font-medium ${
+                    active
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800'
+                  } peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 dark:peer-checked:border-blue-700 dark:peer-checked:bg-blue-950/40 dark:peer-checked:text-blue-300`}
+                >
+                  {status}
+                  <span className="ml-2 rounded-full bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
+                    {statusCounts[status]}
+                  </span>
                 </span>
-              </button>
+              </label>
             )
           })}
-        </div>
+          </div>
+        </fieldset>
 
         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <p className="text-sm text-gray-600 dark:text-gray-400">
