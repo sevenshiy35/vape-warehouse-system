@@ -43,6 +43,7 @@ function getFileKey(file: File) {
 export default function SubmitOrderPage() {
   const router = useRouter()
   const { notify } = useFeedback()
+  const formRef = useRef<HTMLFormElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const previewUrlsRef = useRef<string[]>([])
 
@@ -93,6 +94,7 @@ export default function SubmitOrderPage() {
   }
 
   function clearForm() {
+    formRef.current?.reset()
     updateImages([])
     setCustomerName('')
     setAddress('')
@@ -105,18 +107,6 @@ export default function SubmitOrderPage() {
     setError('')
   }
 
-  function updateCustomerName(nextCustomerName: string) {
-    setCustomerName(nextCustomerName)
-  }
-
-  function updateAddress(nextAddress: string) {
-    setAddress(nextAddress)
-  }
-
-  function updateNote(nextNote: string) {
-    setNote(nextNote)
-  }
-
   function removeImage(key: string) {
     updateImages(images.filter((image) => getFileKey(image) !== key))
   }
@@ -126,7 +116,16 @@ export default function SubmitOrderPage() {
     setError('')
     setCreatedOrder(null)
 
-    if (images.length === 0) {
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    const selectedImages = formData
+      .getAll('images')
+      .filter((value): value is File => value instanceof File && value.size > 0)
+    const nextCustomerName = String(formData.get('customerName') || '').trim()
+    const nextAddress = String(formData.get('address') || '').trim()
+    const nextNote = String(formData.get('note') || '').trim()
+
+    if (selectedImages.length === 0) {
       setError('请至少上传一张订单截图')
       notify({
         type: 'warning',
@@ -136,7 +135,7 @@ export default function SubmitOrderPage() {
       return
     }
 
-    if (!address.trim()) {
+    if (!nextAddress) {
       setError('请填写地址')
       notify({
         type: 'warning',
@@ -149,19 +148,19 @@ export default function SubmitOrderPage() {
     setLoading(true)
 
     try {
-      const formData = new FormData()
+      const submitData = new FormData()
 
-      for (const image of images) {
-        formData.append('images', image)
+      for (const image of selectedImages) {
+        submitData.append('images', image)
       }
 
-      formData.append('customerName', customerName.trim())
-      formData.append('address', address.trim())
-      formData.append('note', note.trim())
+      submitData.append('customerName', nextCustomerName)
+      submitData.append('address', nextAddress)
+      submitData.append('note', nextNote)
 
       const res = await fetch('/api/orders/create', {
         method: 'POST',
-        body: formData,
+        body: submitData,
       })
 
       const data = await res.json()
@@ -215,7 +214,7 @@ export default function SubmitOrderPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_280px]">
         <Panel>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
                 订单截图
@@ -224,6 +223,7 @@ export default function SubmitOrderPage() {
               <input
                 ref={fileInputRef}
                 type="file"
+                name="images"
                 accept="image/*"
                 multiple
                 onChange={(e) => handleFilesChange(e.target.files)}
@@ -294,10 +294,11 @@ export default function SubmitOrderPage() {
               </label>
 
               <input
+                name="customerName"
                 className={inputClass}
-                value={customerName}
-                onChange={(e) => updateCustomerName(e.target.value)}
-                onInput={(e) => updateCustomerName(e.currentTarget.value)}
+                defaultValue={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                onInput={(e) => setCustomerName(e.currentTarget.value)}
                 placeholder="可选"
               />
             </div>
@@ -308,10 +309,11 @@ export default function SubmitOrderPage() {
               </label>
 
               <textarea
+                name="address"
                 className={`${inputClass} min-h-28`}
-                value={address}
-                onChange={(e) => updateAddress(e.target.value)}
-                onInput={(e) => updateAddress(e.currentTarget.value)}
+                defaultValue={address}
+                onChange={(e) => setAddress(e.target.value)}
+                onInput={(e) => setAddress(e.currentTarget.value)}
                 placeholder="例如：615 Pavonia Avenue, Unit #4406"
               />
             </div>
@@ -322,10 +324,11 @@ export default function SubmitOrderPage() {
               </label>
 
               <textarea
+                name="note"
                 className={`${inputClass} min-h-24`}
-                value={note}
-                onChange={(e) => updateNote(e.target.value)}
-                onInput={(e) => updateNote(e.currentTarget.value)}
+                defaultValue={note}
+                onChange={(e) => setNote(e.target.value)}
+                onInput={(e) => setNote(e.currentTarget.value)}
                 placeholder="例如：门禁、到店备注、特殊说明"
               />
             </div>
@@ -370,20 +373,6 @@ export default function SubmitOrderPage() {
                 <p className="text-gray-500 dark:text-gray-400">地址状态</p>
                 <p className="mt-1 font-semibold">
                   {address.trim() ? '已填写' : '待填写'}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
-                <p className="text-gray-500 dark:text-gray-400">客户名</p>
-                <p className="mt-1 truncate font-semibold">
-                  {customerName.trim() || '未填写'}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
-                <p className="text-gray-500 dark:text-gray-400">备注</p>
-                <p className="mt-1 truncate font-semibold">
-                  {note.trim() || '未填写'}
                 </p>
               </div>
             </div>
