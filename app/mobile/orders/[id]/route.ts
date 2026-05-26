@@ -72,7 +72,7 @@ export async function GET(request: Request, context: RouteContext) {
   if (error || !order) {
     return htmlResponse(
       '订单详情',
-      `<main class="stack"><a href="/mobile/orders">返回订单列表</a><h1>订单详情</h1><p class="notice err">读取订单失败：${escapeHtml(
+      `<main class="stack"><a class="nav-back" href="/mobile/orders">订单列表</a><h1>订单详情</h1><p class="notice err">读取订单失败：${escapeHtml(
         error?.message || 'Order not found'
       )}</p></main>`,
       404
@@ -237,7 +237,7 @@ export async function GET(request: Request, context: RouteContext) {
     `
       <main class="stack">
         <header class="stack">
-          <a href="/mobile/orders">返回订单列表</a>
+          <a class="nav-back" href="/mobile/orders">订单列表</a>
           <p class="eyebrow">Order</p>
           <h1>${escapeHtml(order.order_no)}</h1>
           <span class="${getOrderStatusClass(order.status)}">${getOrderStatusLabel(order.status)}</span>

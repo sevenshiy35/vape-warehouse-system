@@ -17,7 +17,7 @@ function formHtml(error?: string) {
     `
       <main class="stack">
         <header class="stack">
-          <a href="/mobile">返回首页</a>
+          <a class="nav-back" href="/mobile">首页</a>
           <p class="eyebrow">Order</p>
           <h1>提交新订单</h1>
         </header>

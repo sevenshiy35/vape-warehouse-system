@@ -58,7 +58,7 @@ export async function GET(request: Request) {
     `
       <main class="stack">
         <header class="stack">
-          <a href="/mobile">返回首页</a>
+          <a class="nav-back" href="/mobile">首页</a>
           <p class="eyebrow">Orders</p>
           <h1>订单列表</h1>
           <div class="grid2">

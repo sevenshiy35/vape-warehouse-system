@@ -49,6 +49,36 @@ export const mobileStyles = `
   h2 { margin: 0 0 12px; font-size: 18px; }
   p { margin: 0; }
   a { color: var(--link); }
+  .nav-back {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: 0 6px 16px var(--shadow);
+    color: var(--text);
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 750;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 12px 8px 10px;
+    text-decoration: none;
+    width: max-content;
+  }
+  .nav-back::before {
+    align-items: center;
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
+    border-radius: 999px;
+    color: #fff;
+    content: "‹";
+    display: inline-flex;
+    font-size: 22px;
+    font-weight: 800;
+    height: 22px;
+    justify-content: center;
+    line-height: 1;
+    width: 22px;
+  }
   .eyebrow { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
   .stack { display: grid; gap: 12px; }
   .row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
