@@ -3,29 +3,35 @@ import { NextResponse } from 'next/server'
 export const mobileStyles = `
   :root {
     color-scheme: light dark;
-    --bg: #f8fafc;
+    --bg: #fff7fb;
     --surface: #fff;
-    --surface-soft: #f9fafb;
-    --text: #111827;
-    --muted: #6b7280;
-    --border: #e5e7eb;
-    --border-strong: #d1d5db;
-    --link: #1d4ed8;
-    --shadow: rgba(15, 23, 42, 0.05);
+    --surface-soft: #fff1f7;
+    --text: #2a1823;
+    --muted: #7c6470;
+    --border: #f4d4e2;
+    --border-strong: #e8b8cc;
+    --link: #be185d;
+    --shadow: rgba(190, 24, 93, 0.09);
+    --accent-gold: #d99a18;
+    --accent-pink: #db2777;
+    --accent-pink-soft: #fce7f3;
     --danger-bg: #fef2f2;
     --danger-border: #fecaca;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f172a;
-      --surface: #111827;
-      --surface-soft: #1f2937;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-      --border: #374151;
-      --border-strong: #4b5563;
-      --link: #93c5fd;
-      --shadow: rgba(0, 0, 0, 0.32);
+      --bg: #190f15;
+      --surface: #24161f;
+      --surface-soft: #301c28;
+      --text: #fff7fb;
+      --muted: #d7b8c7;
+      --border: #4b2638;
+      --border-strong: #6b3650;
+      --link: #f9a8d4;
+      --shadow: rgba(0, 0, 0, 0.34);
+      --accent-gold: #f4c563;
+      --accent-pink: #f472b6;
+      --accent-pink-soft: rgba(244, 114, 182, 0.12);
       --danger-bg: rgba(127, 29, 29, 0.28);
       --danger-border: rgba(248, 113, 113, 0.35);
     }
@@ -60,15 +66,30 @@ export const mobileStyles = `
     gap: 8px;
     border-radius: 12px;
     padding: 18px;
-    background:
-      linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(17, 24, 39, 0.92)),
-      radial-gradient(circle at top right, rgba(20, 184, 166, 0.45), transparent 38%);
+    border: 1px solid rgba(217, 154, 24, 0.34);
+    background: linear-gradient(135deg, #f59e0b 0%, #db2777 54%, #8b1e55 100%);
     color: #fff;
+    box-shadow: 0 18px 34px rgba(190, 24, 93, 0.22);
   }
-  .hero p { color: rgba(255, 255, 255, 0.78); }
-  .home-action { display: grid; gap: 6px; text-decoration: none; color: inherit; }
+  .hero p { color: rgba(255, 255, 255, 0.84); }
+  .hero .eyebrow { color: rgba(255, 255, 255, 0.78); }
+  .home-action {
+    display: grid;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    border-color: var(--border);
+    background: linear-gradient(180deg, var(--surface), var(--surface-soft));
+  }
   .home-action strong { font-size: 18px; }
   .home-action span { color: var(--muted); font-size: 13px; }
+  .home-action::before {
+    content: "";
+    width: 42px;
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-gold), var(--accent-pink));
+  }
   .muted { color: var(--muted); font-size: 13px; }
   .small { font-size: 13px; }
   .label { color: var(--muted); font-size: 13px; margin-bottom: 3px; }
