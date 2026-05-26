@@ -1,63 +1,47 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from "next/server";
 
-const desktopBypassCookie = 'vw_desktop'
+const PUBLIC_API_PATHS = ["/api/login", "/api/logout"];
 
-function isMobileUserAgent(userAgent: string) {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(
-    userAgent
-  )
-}
+export function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-function mobileTarget(pathname: string) {
-  if (pathname === '/') return '/mobile'
-  if (pathname === '/submit-order') return '/mobile/submit-order'
-  if (pathname === '/admin/orders') return '/mobile/orders'
+  const isAdminPage = pathname.startsWith("/admin");
+  const isApiRoute = pathname.startsWith("/api");
+  const isPublicApi = PUBLIC_API_PATHS.some((path) =>
+    pathname.startsWith(path)
+  );
 
-  const orderDetailMatch = pathname.match(/^\/admin\/orders\/([^/]+)$/)
-  if (orderDetailMatch) return `/mobile/orders/${orderDetailMatch[1]}`
-
-  return null
-}
-
-export function proxy(request: NextRequest) {
-  if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return NextResponse.next()
+  if (!isAdminPage && !isApiRoute) {
+    return NextResponse.next();
   }
 
-  const { nextUrl } = request
-
-  if (nextUrl.searchParams.get('desktop') === '1') {
-    const response = NextResponse.next()
-    response.cookies.set(desktopBypassCookie, '1', {
-      maxAge: 60 * 60 * 12,
-      path: '/',
-      sameSite: 'lax',
-    })
-    return response
+  if (isPublicApi) {
+    return NextResponse.next();
   }
 
-  if (request.cookies.get(desktopBypassCookie)?.value === '1') {
-    return NextResponse.next()
+  const sessionSecret = process.env.ADMIN_SESSION_SECRET;
+  const authCookie = req.cookies.get("admin_auth")?.value;
+
+  const isLoggedIn =
+    sessionSecret && authCookie && authCookie === sessionSecret;
+
+  if (isLoggedIn) {
+    return NextResponse.next();
   }
 
-  if (!isMobileUserAgent(request.headers.get('user-agent') || '')) {
-    return NextResponse.next()
+  if (isApiRoute) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 
-  const targetPath = mobileTarget(nextUrl.pathname)
-  if (!targetPath) {
-    return NextResponse.next()
-  }
+  const loginUrl = new URL("/login", req.url);
+  loginUrl.searchParams.set("next", pathname);
 
-  const targetUrl = nextUrl.clone()
-  targetUrl.pathname = targetPath
-  targetUrl.searchParams.delete('desktop')
-
-  return NextResponse.redirect(targetUrl)
+  return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|mobile|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
-  ],
-}
+  matcher: ["/admin/:path*", "/api/:path*"],
+};
