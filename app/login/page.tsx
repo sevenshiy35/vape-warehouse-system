@@ -1,17 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+function sanitizeNext(value: string | null) {
+  if (!value) return "/admin/orders";
+
+  // 只允许站内路径，防止跳转到外部恶意网站
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return "/admin/orders";
+  }
+
+  return value;
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  const next = searchParams.get("next") || "/admin/orders";
-
+  const [next, setNext] = useState("/admin/orders");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNext(sanitizeNext(params.get("next")));
+  }, []);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
