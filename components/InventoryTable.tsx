@@ -248,22 +248,6 @@ export default function InventoryTable({ products }: Props) {
     applyFilters(getFormFilters(event.currentTarget))
   }
 
-  const statusCounts = useMemo(() => {
-    const counts: Record<InventoryStatusFilter, number> = {
-      全部: products.length,
-      OK: 0,
-      低库存: 0,
-      无库存: 0,
-      缺少库位: 0,
-    }
-
-    for (const product of products) {
-      counts[getStatus(product) as InventoryStatusFilter] += 1
-    }
-
-    return counts
-  }, [products])
-
   function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
@@ -463,9 +447,6 @@ export default function InventoryTable({ products }: Props) {
                   } peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 dark:peer-checked:border-blue-700 dark:peer-checked:bg-blue-950/40 dark:peer-checked:text-blue-300`}
                 >
                   {status}
-                  <span className="ml-2 rounded-full bg-black/5 px-2 py-0.5 text-xs dark:bg-white/10">
-                    {statusCounts[status]}
-                  </span>
                 </span>
               </label>
             )
