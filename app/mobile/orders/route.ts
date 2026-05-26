@@ -54,12 +54,13 @@ export async function GET(request: Request) {
     .join('')
 
   return htmlResponse(
-    '手机端订单',
+    '订单列表',
     `
       <main class="stack">
         <header class="stack">
-          <p class="eyebrow">Mobile</p>
-          <h1>手机端订单</h1>
+          <a href="/mobile">返回首页</a>
+          <p class="eyebrow">Orders</p>
+          <h1>订单列表</h1>
           <div class="grid2">
             <a class="btn btn-dark" href="/mobile/submit-order">提交订单</a>
             <a class="btn" href="/">首页</a>

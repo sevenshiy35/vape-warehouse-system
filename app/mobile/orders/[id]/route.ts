@@ -237,8 +237,8 @@ export async function GET(request: Request, context: RouteContext) {
     `
       <main class="stack">
         <header class="stack">
-          <a href="/mobile/orders">返回手机端订单</a>
-          <p class="eyebrow">Mobile Order</p>
+          <a href="/mobile/orders">返回订单列表</a>
+          <p class="eyebrow">Order</p>
           <h1>${escapeHtml(order.order_no)}</h1>
           <span class="${getOrderStatusClass(order.status)}">${getOrderStatusLabel(order.status)}</span>
         </header>
@@ -252,7 +252,7 @@ export async function GET(request: Request, context: RouteContext) {
         </section>
 
         <section class="card stack">
-          <h2>手机端操作</h2>
+          <h2>订单操作</h2>
           <form action="${actionPath}" method="post">
             ${hiddenOrderId(order.id)}
             <input type="hidden" name="action" value="confirm">

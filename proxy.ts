@@ -9,7 +9,7 @@ function isMobileUserAgent(userAgent: string) {
 }
 
 function mobileTarget(pathname: string) {
-  if (pathname === '/') return '/mobile/orders'
+  if (pathname === '/') return '/mobile'
   if (pathname === '/submit-order') return '/mobile/submit-order'
   if (pathname === '/admin/orders') return '/mobile/orders'
 

@@ -13,12 +13,12 @@ export const runtime = 'nodejs'
 
 function formHtml(error?: string) {
   return htmlResponse(
-    '手机端提交订单',
+    '提交订单',
     `
       <main class="stack">
         <header class="stack">
-          <a href="/mobile/orders">返回手机端订单</a>
-          <p class="eyebrow">Mobile</p>
+          <a href="/mobile">返回首页</a>
+          <p class="eyebrow">Order</p>
           <h1>提交新订单</h1>
         </header>
         ${error ? `<p class="notice err">${escapeHtml(error)}</p>` : ''}
@@ -26,7 +26,7 @@ function formHtml(error?: string) {
           <div>
             <label>订单截图</label>
             <input type="file" name="images" accept="image/*" multiple required>
-            <p class="muted" style="margin-top:6px">手机端专用原生上传，不使用前端脚本。</p>
+            <p class="muted" style="margin-top:6px">选择订单截图后提交，系统会保存图片和订单信息。</p>
           </div>
           <div>
             <label>客户名</label>
