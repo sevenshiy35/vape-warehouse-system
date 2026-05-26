@@ -105,6 +105,18 @@ export default function SubmitOrderPage() {
     setError('')
   }
 
+  function updateCustomerName(nextCustomerName: string) {
+    setCustomerName(nextCustomerName)
+  }
+
+  function updateAddress(nextAddress: string) {
+    setAddress(nextAddress)
+  }
+
+  function updateNote(nextNote: string) {
+    setNote(nextNote)
+  }
+
   function removeImage(key: string) {
     updateImages(images.filter((image) => getFileKey(image) !== key))
   }
@@ -215,6 +227,7 @@ export default function SubmitOrderPage() {
                 accept="image/*"
                 multiple
                 onChange={(e) => handleFilesChange(e.target.files)}
+                onInput={(e) => handleFilesChange(e.currentTarget.files)}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-900 file:px-3 file:py-1.5 file:text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:file:bg-gray-100 dark:file:text-gray-900"
               />
 
@@ -283,7 +296,8 @@ export default function SubmitOrderPage() {
               <input
                 className={inputClass}
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => updateCustomerName(e.target.value)}
+                onInput={(e) => updateCustomerName(e.currentTarget.value)}
                 placeholder="可选"
               />
             </div>
@@ -296,7 +310,8 @@ export default function SubmitOrderPage() {
               <textarea
                 className={`${inputClass} min-h-28`}
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => updateAddress(e.target.value)}
+                onInput={(e) => updateAddress(e.currentTarget.value)}
                 placeholder="例如：615 Pavonia Avenue, Unit #4406"
               />
             </div>
@@ -309,7 +324,8 @@ export default function SubmitOrderPage() {
               <textarea
                 className={`${inputClass} min-h-24`}
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
+                onChange={(e) => updateNote(e.target.value)}
+                onInput={(e) => updateNote(e.currentTarget.value)}
                 placeholder="例如：门禁、到店备注、特殊说明"
               />
             </div>
@@ -354,6 +370,20 @@ export default function SubmitOrderPage() {
                 <p className="text-gray-500 dark:text-gray-400">地址状态</p>
                 <p className="mt-1 font-semibold">
                   {address.trim() ? '已填写' : '待填写'}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
+                <p className="text-gray-500 dark:text-gray-400">客户名</p>
+                <p className="mt-1 truncate font-semibold">
+                  {customerName.trim() || '未填写'}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
+                <p className="text-gray-500 dark:text-gray-400">备注</p>
+                <p className="mt-1 truncate font-semibold">
+                  {note.trim() || '未填写'}
                 </p>
               </div>
             </div>
