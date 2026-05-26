@@ -3,35 +3,35 @@ import { NextResponse } from 'next/server'
 export const mobileStyles = `
   :root {
     color-scheme: light dark;
-    --bg: #fff7fb;
+    --bg: #fbf7ef;
     --surface: #fff;
-    --surface-soft: #fff1f7;
-    --text: #2a1823;
-    --muted: #7c6470;
-    --border: #f4d4e2;
-    --border-strong: #e8b8cc;
-    --link: #be185d;
-    --shadow: rgba(190, 24, 93, 0.09);
+    --surface-soft: #fff8e8;
+    --text: #21180b;
+    --muted: #75664a;
+    --border: #ead7ad;
+    --border-strong: #d7b567;
+    --link: #9a6a05;
+    --shadow: rgba(122, 83, 8, 0.12);
     --accent-gold: #d99a18;
-    --accent-pink: #db2777;
-    --accent-pink-soft: #fce7f3;
+    --accent-gold-deep: #8a5a06;
+    --accent-gold-soft: #fff2c7;
     --danger-bg: #fef2f2;
     --danger-border: #fecaca;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #190f15;
-      --surface: #24161f;
-      --surface-soft: #301c28;
-      --text: #fff7fb;
-      --muted: #d7b8c7;
-      --border: #4b2638;
-      --border-strong: #6b3650;
-      --link: #f9a8d4;
+      --bg: #14100a;
+      --surface: #211a10;
+      --surface-soft: #2b2112;
+      --text: #fff8e7;
+      --muted: #d6c49e;
+      --border: #4b3a18;
+      --border-strong: #7a5b1d;
+      --link: #f7d778;
       --shadow: rgba(0, 0, 0, 0.34);
       --accent-gold: #f4c563;
-      --accent-pink: #f472b6;
-      --accent-pink-soft: rgba(244, 114, 182, 0.12);
+      --accent-gold-deep: #b77912;
+      --accent-gold-soft: rgba(244, 197, 99, 0.14);
       --danger-bg: rgba(127, 29, 29, 0.28);
       --danger-border: rgba(248, 113, 113, 0.35);
     }
@@ -67,9 +67,10 @@ export const mobileStyles = `
   }
   .nav-back::before {
     align-items: center;
-    background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
+    background: linear-gradient(145deg, #fff1b8 0%, var(--accent-gold) 48%, var(--accent-gold-deep) 100%);
     border-radius: 999px;
-    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 4px 10px rgba(138, 90, 6, 0.28);
+    color: #2a1a05;
     content: "‹";
     display: inline-flex;
     font-size: 22px;
@@ -97,9 +98,11 @@ export const mobileStyles = `
     border-radius: 12px;
     padding: 18px;
     border: 1px solid rgba(217, 154, 24, 0.34);
-    background: linear-gradient(135deg, #f59e0b 0%, #db2777 54%, #8b1e55 100%);
+    background:
+      linear-gradient(145deg, rgba(255, 245, 204, 0.2) 0%, transparent 32%),
+      linear-gradient(135deg, #f6c85f 0%, #d99a18 44%, #7c4d05 100%);
     color: #fff;
-    box-shadow: 0 18px 34px rgba(190, 24, 93, 0.22);
+    box-shadow: 0 18px 34px rgba(122, 83, 8, 0.24);
   }
   .hero p { color: rgba(255, 255, 255, 0.84); }
   .hero .eyebrow { color: rgba(255, 255, 255, 0.78); }
@@ -110,6 +113,7 @@ export const mobileStyles = `
     color: inherit;
     border-color: var(--border);
     background: linear-gradient(180deg, var(--surface), var(--surface-soft));
+    box-shadow: 0 12px 26px rgba(122, 83, 8, 0.1);
   }
   .home-action strong { font-size: 18px; }
   .home-action span { color: var(--muted); font-size: 13px; }
@@ -118,7 +122,7 @@ export const mobileStyles = `
     width: 42px;
     height: 4px;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent-gold), var(--accent-pink));
+    background: linear-gradient(90deg, #fff0b3, var(--accent-gold), var(--accent-gold-deep));
   }
   .muted { color: var(--muted); font-size: 13px; }
   .small { font-size: 13px; }
@@ -141,9 +145,21 @@ export const mobileStyles = `
     font-size: 15px;
     font-weight: 700;
     text-decoration: none;
+    box-shadow: 0 8px 18px var(--shadow);
+    transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
   }
-  .btn-primary { background: #2563eb; border-color: #2563eb; color: #fff; }
-  .btn-dark { background: #111827; border-color: #111827; color: #fff; }
+  .btn:active, button:active, .home-action:active, .nav-back:active {
+    transform: translateY(1px);
+    filter: brightness(0.98);
+  }
+  .btn-primary, .btn-dark {
+    background:
+      linear-gradient(180deg, rgba(255, 248, 220, 0.45), rgba(255, 248, 220, 0) 42%),
+      linear-gradient(135deg, #f2c85c 0%, #d99a18 48%, #8a5a06 100%);
+    border-color: rgba(138, 90, 6, 0.42);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 22px rgba(138, 90, 6, 0.22);
+    color: #21180b;
+  }
   .btn-success { background: #15803d; border-color: #15803d; color: #fff; }
   .btn-danger { background: #dc2626; border-color: #dc2626; color: #fff; }
   button:disabled, .btn-disabled { opacity: 0.45; pointer-events: none; }
