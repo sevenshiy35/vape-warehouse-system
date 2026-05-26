@@ -21,7 +21,12 @@ function htmlEscape(value: string) {
     .replace(/"/g, '&quot;')
 }
 
-function errorResponse(request: Request, message: string, status = 400) {
+function errorResponse(
+  request: Request,
+  message: string,
+  status = 400,
+  returnHref = '/submit-order'
+) {
   if (wantsJsonResponse(request)) {
     return NextResponse.json({ error: message }, { status })
   }
@@ -29,7 +34,7 @@ function errorResponse(request: Request, message: string, status = 400) {
   const safeMessage = htmlEscape(message)
 
   return new NextResponse(
-    `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>提交订单失败</title></head><body style="font-family:system-ui,sans-serif;padding:24px;line-height:1.6"><h1>提交订单失败</h1><p>${safeMessage}</p><p><a href="/submit-order">返回重新提交</a></p></body></html>`,
+    `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>提交订单失败</title></head><body style="font-family:system-ui,sans-serif;padding:24px;line-height:1.6"><h1>提交订单失败</h1><p>${safeMessage}</p><p><a href="${htmlEscape(returnHref)}">返回重新提交</a></p></body></html>`,
     {
       status,
       headers: {
@@ -80,13 +85,16 @@ export async function POST(request: Request) {
     const customerName = String(formData.get('customerName') || '').trim()
     const address = String(formData.get('address') || '').trim()
     const note = String(formData.get('note') || '').trim()
+    const returnTo = String(formData.get('returnTo') || '').trim()
+    const isMobileSubmit = returnTo === 'mobile'
+    const returnHref = isMobileSubmit ? '/mobile/submit-order' : '/submit-order'
 
     if (files.length === 0) {
-      return errorResponse(request, '请至少上传一张订单截图')
+      return errorResponse(request, '请至少上传一张订单截图', 400, returnHref)
     }
 
     if (!address) {
-      return errorResponse(request, '请填写地址')
+      return errorResponse(request, '请填写地址', 400, returnHref)
     }
 
     const { data: orderNo, error: orderNoError } = await supabaseAdmin.rpc(
@@ -96,7 +104,9 @@ export async function POST(request: Request) {
     if (orderNoError || !orderNo) {
       return errorResponse(
         request,
-        orderNoError?.message || '生成 OrderID 失败'
+        orderNoError?.message || '生成 OrderID 失败',
+        400,
+        returnHref
       )
     }
 
@@ -123,7 +133,9 @@ export async function POST(request: Request) {
       if (uploadError) {
         return errorResponse(
           request,
-          `上传第 ${i + 1} 张图片失败：${uploadError.message}`
+          `上传第 ${i + 1} 张图片失败：${uploadError.message}`,
+          400,
+          returnHref
         )
       }
 
@@ -148,14 +160,16 @@ export async function POST(request: Request) {
       .single()
 
     if (insertError) {
-      return errorResponse(request, insertError.message)
+      return errorResponse(request, insertError.message, 400, returnHref)
     }
 
     if (!wantsJsonResponse(request)) {
       return new NextResponse(null, {
         status: 303,
         headers: {
-          Location: `/admin/orders/${order.id}`,
+          Location: isMobileSubmit
+            ? `/mobile/orders/${order.id}`
+            : `/admin/orders/${order.id}`,
         },
       })
     }

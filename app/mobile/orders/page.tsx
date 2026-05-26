@@ -47,12 +47,12 @@ export default async function MobileOrdersPage({ searchParams }: PageProps) {
           </p>
           <h1 className="text-2xl font-bold">手机端订单</h1>
           <div className="flex gap-2">
-            <Link
-              href="/submit-order"
+            <a
+              href="/mobile/submit-order"
               className="inline-flex min-h-10 items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
             >
               提交订单
-            </Link>
+            </a>
             <Link
               href="/"
               className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800"
