@@ -160,6 +160,10 @@ export default function SubmitOrderPage() {
 
       const res = await fetch('/api/orders/create', {
         method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'X-Requested-With': 'fetch',
+        },
         body: submitData,
       })
 
@@ -214,7 +218,14 @@ export default function SubmitOrderPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_280px]">
         <Panel>
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+          <form
+            ref={formRef}
+            action="/api/orders/create"
+            method="post"
+            encType="multipart/form-data"
+            onSubmit={handleSubmit}
+            className="space-y-5"
+          >
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
                 订单截图

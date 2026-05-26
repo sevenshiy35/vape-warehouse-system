@@ -4,17 +4,57 @@ import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
+function wantsJsonResponse(request: Request) {
+  const accept = request.headers.get('accept') || ''
+
+  return (
+    request.headers.get('x-requested-with') === 'fetch' ||
+    accept.includes('application/json')
+  )
+}
+
+function htmlEscape(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function errorResponse(request: Request, message: string, status = 400) {
+  if (wantsJsonResponse(request)) {
+    return NextResponse.json({ error: message }, { status })
+  }
+
+  const safeMessage = htmlEscape(message)
+
+  return new NextResponse(
+    `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>提交订单失败</title></head><body style="font-family:system-ui,sans-serif;padding:24px;line-height:1.6"><h1>提交订单失败</h1><p>${safeMessage}</p><p><a href="/submit-order">返回重新提交</a></p></body></html>`,
+    {
+      status,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+      },
+    }
+  )
+}
+
 function getFileExt(file: File) {
   const name = file.name || ''
   const fromName = name.split('.').pop()?.toLowerCase()
 
-  if (fromName && ['jpg', 'jpeg', 'png', 'webp'].includes(fromName)) {
+  if (
+    fromName &&
+    ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(fromName)
+  ) {
     return fromName
   }
 
   if (file.type === 'image/png') return 'png'
   if (file.type === 'image/webp') return 'webp'
   if (file.type === 'image/jpeg') return 'jpg'
+  if (file.type === 'image/heic') return 'heic'
+  if (file.type === 'image/heif') return 'heif'
 
   return 'jpg'
 }
@@ -42,17 +82,11 @@ export async function POST(request: Request) {
     const note = String(formData.get('note') || '').trim()
 
     if (files.length === 0) {
-      return NextResponse.json(
-        { error: '请至少上传一张订单截图' },
-        { status: 400 }
-      )
+      return errorResponse(request, '请至少上传一张订单截图')
     }
 
     if (!address) {
-      return NextResponse.json(
-        { error: '请填写地址' },
-        { status: 400 }
-      )
+      return errorResponse(request, '请填写地址')
     }
 
     const { data: orderNo, error: orderNoError } = await supabaseAdmin.rpc(
@@ -60,9 +94,9 @@ export async function POST(request: Request) {
     )
 
     if (orderNoError || !orderNo) {
-      return NextResponse.json(
-        { error: orderNoError?.message || '生成 OrderID 失败' },
-        { status: 400 }
+      return errorResponse(
+        request,
+        orderNoError?.message || '生成 OrderID 失败'
       )
     }
 
@@ -87,9 +121,9 @@ export async function POST(request: Request) {
         })
 
       if (uploadError) {
-        return NextResponse.json(
-          { error: `上传第 ${i + 1} 张图片失败：${uploadError.message}` },
-          { status: 400 }
+        return errorResponse(
+          request,
+          `上传第 ${i + 1} 张图片失败：${uploadError.message}`
         )
       }
 
@@ -114,9 +148,13 @@ export async function POST(request: Request) {
       .single()
 
     if (insertError) {
-      return NextResponse.json(
-        { error: insertError.message },
-        { status: 400 }
+      return errorResponse(request, insertError.message)
+    }
+
+    if (!wantsJsonResponse(request)) {
+      return NextResponse.redirect(
+        new URL(`/admin/orders/${order.id}`, request.url),
+        303
       )
     }
 
@@ -125,9 +163,10 @@ export async function POST(request: Request) {
       order,
     })
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: getErrorMessage(error, '创建订单失败') },
-      { status: 500 }
+    return errorResponse(
+      request,
+      getErrorMessage(error, '创建订单失败'),
+      500
     )
   }
 }
