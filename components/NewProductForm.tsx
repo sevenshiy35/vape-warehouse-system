@@ -4,19 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFeedback } from '@/components/FeedbackProvider'
 
-const brandOptions = [
-  'SP',
-  'IceBomb',
-  'Umi',
-  'Relx三颗装',
-  '烟杆',
-  'Yohuu',
-  'Yohuu烟弹',
-  'BBmon',
-  '真烟',
-]
+type Props = {
+  brandOptions?: string[]
+}
 
-export default function NewProductForm() {
+export default function NewProductForm({ brandOptions = [] }: Props) {
   const router = useRouter()
   const { confirm, notify } = useFeedback()
 
