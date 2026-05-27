@@ -19,8 +19,6 @@ export default async function AdminInventoryPage() {
       inventory (
         shelf_location,
         quantity_on_hand,
-        loose_quantity,
-        box_quantity,
         low_stock_threshold,
         updated_at
       )

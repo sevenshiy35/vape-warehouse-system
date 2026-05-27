@@ -120,10 +120,6 @@ async function importInventory() {
         getValue(row, ['库存数量', '数量', 'stock_quantity'])
       )
 
-      const boxQty = toNumber(
-        getValue(row, ['整盒库存', 'box_quantity'])
-      )
-
       const totalQty = toNumber(
         getValue(row, ['总计库存', 'total_quantity'])
       )
@@ -136,14 +132,10 @@ async function importInventory() {
       const brand = getBrandFromSheet(sheetName)
 
       let quantityOnHand = normalQty
-      let looseQuantity = null
-      let boxQuantity = null
 
       // Relx 三颗装特殊规则：
       // 如果有“总计库存”，用总计库存作为实际可用库存。
       if (sheetName === 'Relx三颗装') {
-        looseQuantity = normalQty
-        boxQuantity = boxQty
         quantityOnHand = totalQty > 0 ? totalQty : normalQty
       }
 
@@ -187,8 +179,6 @@ async function importInventory() {
             product_id: product.id,
             shelf_location: finalShelfLocation,
             quantity_on_hand: quantityOnHand,
-            loose_quantity: looseQuantity,
-            box_quantity: boxQuantity,
             updated_at: new Date().toISOString(),
           },
           {

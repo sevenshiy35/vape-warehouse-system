@@ -4,18 +4,6 @@ import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
-function toOptionalInteger(value: unknown) {
-  if (value === null || value === undefined || value === '') return null
-
-  const num = Number(value)
-
-  if (!Number.isInteger(num)) {
-    return null
-  }
-
-  return num
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -31,8 +19,6 @@ export async function POST(request: Request) {
     const operator = String(body.operator || 'admin').trim()
 
     const initialQty = Number(body.initialQty || 0)
-    const looseQuantity = toOptionalInteger(body.looseQuantity)
-    const boxQuantity = toOptionalInteger(body.boxQuantity)
     const lowStockThreshold = Number(body.lowStockThreshold || 3)
 
     if (!brand) {
@@ -82,8 +68,6 @@ export async function POST(request: Request) {
         p_source_sheet: sourceSheet || brand,
         p_initial_qty: initialQty,
         p_shelf_location: shelfLocation || null,
-        p_loose_quantity: looseQuantity,
-        p_box_quantity: boxQuantity,
         p_low_stock_threshold: lowStockThreshold,
         p_operator: operator || 'admin',
       }
@@ -110,8 +94,6 @@ export async function POST(request: Request) {
         inventory (
           shelf_location,
           quantity_on_hand,
-          loose_quantity,
-          box_quantity,
           low_stock_threshold
         )
       `)

@@ -1,8 +1,6 @@
 export type InventoryRecord = {
   shelf_location: string | null
   quantity_on_hand: number
-  loose_quantity?: number | null
-  box_quantity?: number | null
   low_stock_threshold?: number | null
   updated_at?: string | null
 }

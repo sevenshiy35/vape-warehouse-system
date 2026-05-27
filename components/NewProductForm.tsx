@@ -29,8 +29,6 @@ export default function NewProductForm() {
   const [sourceSheet, setSourceSheet] = useState('')
   const [initialQty, setInitialQty] = useState(0)
   const [shelfLocation, setShelfLocation] = useState('')
-  const [looseQuantity, setLooseQuantity] = useState('')
-  const [boxQuantity, setBoxQuantity] = useState('')
   const [lowStockThreshold, setLowStockThreshold] = useState(3)
   const [operator, setOperator] = useState('admin')
   const [loading, setLoading] = useState(false)
@@ -84,8 +82,6 @@ export default function NewProductForm() {
         sourceSheet: sourceSheet || brand,
         initialQty,
         shelfLocation,
-        looseQuantity,
-        boxQuantity,
         lowStockThreshold,
         operator,
       }),
@@ -113,8 +109,6 @@ export default function NewProductForm() {
     setSourceSheet('')
     setInitialQty(0)
     setShelfLocation('')
-    setLooseQuantity('')
-    setBoxQuantity('')
     setLowStockThreshold(3)
 
     router.push('/admin/inventory')
@@ -255,34 +249,6 @@ export default function NewProductForm() {
             className="w-full rounded border px-3 py-2"
             value={lowStockThreshold}
             onChange={(e) => setLowStockThreshold(Number(e.target.value))}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            零散库存，可选
-          </label>
-          <input
-            type="number"
-            min={0}
-            className="w-full rounded border px-3 py-2"
-            value={looseQuantity}
-            onChange={(e) => setLooseQuantity(e.target.value)}
-            placeholder="主要给 Relx 使用"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            整盒库存，可选
-          </label>
-          <input
-            type="number"
-            min={0}
-            className="w-full rounded border px-3 py-2"
-            value={boxQuantity}
-            onChange={(e) => setBoxQuantity(e.target.value)}
-            placeholder="主要给 Relx 使用"
           />
         </div>
 

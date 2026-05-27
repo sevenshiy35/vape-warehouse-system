@@ -21,8 +21,6 @@ type SortKey =
   | 'product_name_en'
   | 'shelf_location'
   | 'quantity_on_hand'
-  | 'loose_quantity'
-  | 'box_quantity'
   | 'status'
 
 type SortDirection = 'asc' | 'desc'
@@ -84,18 +82,6 @@ function getSortValue(product: InventoryProduct, key: SortKey) {
     return inv?.quantity_on_hand === null || inv?.quantity_on_hand === undefined
       ? null
       : Number(inv.quantity_on_hand)
-  }
-
-  if (key === 'loose_quantity') {
-    return inv?.loose_quantity === null || inv?.loose_quantity === undefined
-      ? null
-      : Number(inv.loose_quantity)
-  }
-
-  if (key === 'box_quantity') {
-    return inv?.box_quantity === null || inv?.box_quantity === undefined
-      ? null
-      : Number(inv.box_quantity)
   }
 
   if (key === 'status') {
@@ -542,7 +528,7 @@ export default function InventoryTable({ products }: Props) {
                   </span>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       库位
@@ -559,14 +545,6 @@ export default function InventoryTable({ products }: Props) {
                     <p className="mt-1 text-lg font-bold">{quantity}</p>
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      整/散
-                    </p>
-                    <p className="mt-1 font-bold">
-                      {inv?.box_quantity ?? '-'} / {inv?.loose_quantity ?? '-'}
-                    </p>
-                  </div>
                 </div>
               </div>
             )
@@ -575,7 +553,7 @@ export default function InventoryTable({ products }: Props) {
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
-        <table className="w-full min-w-[1080px] text-sm">
+        <table className="w-full min-w-[900px] text-sm">
           <thead className="sticky top-0 bg-gray-100 dark:bg-gray-800">
             <tr>
               <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
@@ -607,14 +585,6 @@ export default function InventoryTable({ products }: Props) {
               </th>
 
               <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
-                <SortHeader label="零散库存" sortKey="loose_quantity" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
-              </th>
-
-              <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
-                <SortHeader label="整盒库存" sortKey="box_quantity" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
-              </th>
-
-              <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
                 <SortHeader label="状态" sortKey="status" currentSortKey={sortKey} direction={sortDirection} onSort={handleSort} />
               </th>
             </tr>
@@ -623,7 +593,7 @@ export default function InventoryTable({ products }: Props) {
           <tbody>
             {sortedProducts.length === 0 ? (
               <tr>
-                <td colSpan={10} className="p-6 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={8} className="p-6 text-center text-gray-500 dark:text-gray-400">
                   没有符合条件的库存
                 </td>
               </tr>
@@ -679,14 +649,6 @@ export default function InventoryTable({ products }: Props) {
 
                     <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
                       {quantity}
-                    </td>
-
-                    <td className="border-b border-gray-200 p-3 dark:border-gray-800">
-                      {inv?.loose_quantity ?? '-'}
-                    </td>
-
-                    <td className="border-b border-gray-200 p-3 dark:border-gray-800">
-                      {inv?.box_quantity ?? '-'}
                     </td>
 
                     <td className="border-b border-gray-200 p-3 dark:border-gray-800">
