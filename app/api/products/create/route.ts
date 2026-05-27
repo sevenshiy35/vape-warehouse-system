@@ -13,7 +13,6 @@ export async function POST(request: Request) {
     const productNameCN = String(body.productNameCN || '').trim()
     const displayName = String(body.displayName || '').trim()
     const productNameEN = String(body.productNameEN || '').trim()
-    const category = String(body.category || '').trim()
     const shelfLocation = String(body.shelfLocation || '').trim()
     const operator = String(body.operator || 'admin').trim()
 
@@ -63,7 +62,7 @@ export async function POST(request: Request) {
         p_product_name_cn: productNameCN,
         p_display_name: displayName || null,
         p_product_name_en: productNameEN || null,
-        p_category: category || null,
+        p_category: null,
         p_source_sheet: brand,
         p_initial_qty: initialQty,
         p_shelf_location: shelfLocation || null,

@@ -25,7 +25,6 @@ export default function NewProductForm() {
   const [productNameCN, setProductNameCN] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [productNameEN, setProductNameEN] = useState('')
-  const [category, setCategory] = useState('')
   const [initialQty, setInitialQty] = useState(0)
   const [shelfLocation, setShelfLocation] = useState('')
   const [lowStockThreshold, setLowStockThreshold] = useState(3)
@@ -77,7 +76,6 @@ export default function NewProductForm() {
         productNameCN,
         displayName,
         productNameEN,
-        category,
         initialQty,
         shelfLocation,
         lowStockThreshold,
@@ -103,7 +101,6 @@ export default function NewProductForm() {
     setProductNameCN('')
     setDisplayName('')
     setProductNameEN('')
-    setCategory('')
     setInitialQty(0)
     setShelfLocation('')
     setLowStockThreshold(3)
@@ -184,18 +181,6 @@ export default function NewProductForm() {
             value={productNameEN}
             onChange={(e) => setProductNameEN(e.target.value)}
             placeholder="例如 Coconut Water"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            分类，可选
-          </label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="例如 一次性 / 烟弹 / 烟杆"
           />
         </div>
 
