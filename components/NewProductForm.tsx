@@ -21,7 +21,7 @@ export default function NewProductForm() {
   const { confirm, notify } = useFeedback()
 
   const [sku, setSku] = useState('')
-  const [brand, setBrand] = useState('SP')
+  const [brand, setBrand] = useState('')
   const [productNameCN, setProductNameCN] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [productNameEN, setProductNameEN] = useState('')
@@ -98,6 +98,7 @@ export default function NewProductForm() {
     notify({ type: 'success', title: '新品添加成功' })
 
     setSku('')
+    setBrand('')
     setProductNameCN('')
     setDisplayName('')
     setProductNameEN('')
