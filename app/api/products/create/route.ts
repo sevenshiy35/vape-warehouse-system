@@ -14,7 +14,6 @@ export async function POST(request: Request) {
     const displayName = String(body.displayName || '').trim()
     const productNameEN = String(body.productNameEN || '').trim()
     const category = String(body.category || '').trim()
-    const sourceSheet = String(body.sourceSheet || '').trim()
     const shelfLocation = String(body.shelfLocation || '').trim()
     const operator = String(body.operator || 'admin').trim()
 
@@ -65,7 +64,7 @@ export async function POST(request: Request) {
         p_display_name: displayName || null,
         p_product_name_en: productNameEN || null,
         p_category: category || null,
-        p_source_sheet: sourceSheet || brand,
+        p_source_sheet: brand,
         p_initial_qty: initialQty,
         p_shelf_location: shelfLocation || null,
         p_low_stock_threshold: lowStockThreshold,
