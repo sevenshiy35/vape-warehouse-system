@@ -26,7 +26,6 @@ type ProductRow = {
   id: string
   sku: string
   brand: string | null
-  source_sheet: string | null
   product_name_cn: string | null
   product_name_en: string | null
   display_name: string | null
@@ -380,7 +379,6 @@ export async function POST(request: Request) {
         id,
         sku,
         brand,
-        source_sheet,
         product_name_cn,
         product_name_en,
         display_name,

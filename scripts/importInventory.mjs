@@ -149,7 +149,6 @@ async function importInventory() {
           {
             sku,
             brand,
-            source_sheet: sheetName,
             product_name_cn: productNameCN,
             display_name: displayName,
             product_name_en: productNameEN,

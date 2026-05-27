@@ -9,7 +9,6 @@ export type ProductWithInventory = {
   id: string
   sku: string
   brand: string
-  source_sheet?: string | null
   product_name_cn: string
   display_name: string | null
   product_name_en: string | null

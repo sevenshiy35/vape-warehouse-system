@@ -12,7 +12,6 @@ export default async function AdminInventoryPage() {
       id,
       sku,
       brand,
-      source_sheet,
       product_name_cn,
       display_name,
       product_name_en,
