@@ -349,7 +349,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                 <SortHeader label="备注" sortKey="note" filters={filters} />
               </th>
 
-              <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+              <th className="w-28 whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
                 <SortHeader label="状态" sortKey="status" filters={filters} />
               </th>
 
@@ -400,9 +400,9 @@ export default function OrdersTable({ orders, filters }: Props) {
                     {order.note || '-'}
                   </td>
 
-                  <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                  <td className="w-28 whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
                     <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${getStatusClass(
+                      className={`inline-flex whitespace-nowrap rounded px-2 py-1 text-xs font-medium ${getStatusClass(
                       order.status
                     )}`}
                   >
