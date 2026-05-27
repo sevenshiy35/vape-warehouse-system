@@ -12,6 +12,7 @@ import RecognizeOrderButton from '@/components/RecognizeOrderButton'
 import AddOrderImagesButton from '@/components/AddOrderImagesButton'
 import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
 import type { ProductWithInventory } from '@/lib/types'
+import { formatEasternTime } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -258,9 +259,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <div>
                 <p className="text-gray-500 dark:text-gray-400">创建时间</p>
                 <p>
-                  {order.created_at
-                    ? new Date(order.created_at).toLocaleString()
-                    : '-'}
+                  {formatEasternTime(order.created_at)}
                 </p>
               </div>
             </div>

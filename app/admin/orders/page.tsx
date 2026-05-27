@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import OrdersTable from '@/components/OrdersTable'
 import { NavButton, PageHeader, PageShell } from '@/components/PageChrome'
+import { getEasternDateRangeUtc } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +51,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     ? String(sp.sort)
     : 'created_at'
   const dir = sp.dir === 'asc' ? 'asc' : 'desc'
+  const dateRange = getEasternDateRangeUtc(dateFrom, dateTo)
 
   let query = supabaseAdmin
     .from('orders')
@@ -62,11 +64,15 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   }
 
   if (dateFrom) {
-    query = query.gte('created_at', `${dateFrom}T00:00:00`)
+    if (dateRange.fromIso) {
+      query = query.gte('created_at', dateRange.fromIso)
+    }
   }
 
   if (dateTo) {
-    query = query.lte('created_at', `${dateTo}T23:59:59`)
+    if (dateRange.toExclusiveIso) {
+      query = query.lt('created_at', dateRange.toExclusiveIso)
+    }
   }
 
   if (q) {

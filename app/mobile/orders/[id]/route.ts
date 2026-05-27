@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
+import { formatEasternTime } from '@/lib/time'
 import {
   escapeHtml,
   getItemStatusClass,
@@ -248,7 +249,7 @@ export async function GET(request: Request, context: RouteContext) {
           <div><p class="label">客户名</p><p class="value">${escapeHtml(order.customer_name || '-')}</p></div>
           <div><p class="label">地址</p><p class="value">${escapeHtml(order.address || '-')}</p></div>
           <div><p class="label">备注</p><p>${escapeHtml(order.note || '-')}</p></div>
-          <div><p class="label">创建时间</p><p>${escapeHtml(order.created_at ? new Date(order.created_at).toLocaleString() : '-')}</p></div>
+          <div><p class="label">创建时间</p><p>${escapeHtml(formatEasternTime(order.created_at))}</p></div>
         </section>
 
         <section class="card stack">

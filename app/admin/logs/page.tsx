@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
+import { formatEasternTime } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -164,9 +165,7 @@ export default async function AdminLogsPage() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
                   >
                     <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
-                      {log.created_at
-                        ? new Date(log.created_at).toLocaleString()
-                        : '-'}
+                      {formatEasternTime(log.created_at)}
                     </td>
 
                     <td className="border-b border-gray-200 p-3 dark:border-gray-800">

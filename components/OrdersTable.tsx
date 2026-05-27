@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { formatEasternTime } from '@/lib/time'
 
 type Order = {
   id: string
@@ -270,9 +271,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                   </p>
 
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {order.created_at
-                      ? new Date(order.created_at).toLocaleString()
-                      : '-'}
+                    {formatEasternTime(order.created_at)}
                   </p>
                 </div>
 
@@ -420,9 +419,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                   </td>
 
                   <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
-                    {order.created_at
-                      ? new Date(order.created_at).toLocaleString()
-                      : '-'}
+                    {formatEasternTime(order.created_at)}
                   </td>
                 </tr>
               ))

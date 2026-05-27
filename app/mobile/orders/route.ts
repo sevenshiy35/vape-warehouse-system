@@ -5,6 +5,7 @@ import {
   getOrderStatusLabel,
   htmlResponse,
 } from '../_lib'
+import { formatEasternTime } from '@/lib/time'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
           <div class="row" style="border-top:1px solid #f3f4f6;padding-top:10px">
             <span class="muted">商品：${escapeHtml(order.total_items ?? '-')}</span>
             <span class="muted">${escapeHtml(
-              order.created_at ? new Date(order.created_at).toLocaleString() : '-'
+              formatEasternTime(order.created_at)
             )}</span>
           </div>
         </a>
