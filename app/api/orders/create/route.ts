@@ -85,16 +85,13 @@ export async function POST(request: Request) {
     const customerName = String(formData.get('customerName') || '').trim()
     const address = String(formData.get('address') || '').trim()
     const note = String(formData.get('note') || '').trim()
-    const returnTo = String(formData.get('returnTo') || '').trim()
-    const isMobileSubmit = returnTo === 'mobile'
-    const returnHref = isMobileSubmit ? '/mobile/submit-order' : '/submit-order'
 
     if (files.length === 0) {
-      return errorResponse(request, '请至少上传一张订单截图', 400, returnHref)
+      return errorResponse(request, '请至少上传一张订单截图', 400)
     }
 
     if (!address) {
-      return errorResponse(request, '请填写地址', 400, returnHref)
+      return errorResponse(request, '请填写地址', 400)
     }
 
     const { data: orderNo, error: orderNoError } = await supabaseAdmin.rpc(
@@ -105,8 +102,7 @@ export async function POST(request: Request) {
       return errorResponse(
         request,
         orderNoError?.message || '生成 OrderID 失败',
-        400,
-        returnHref
+        400
       )
     }
 
@@ -134,8 +130,7 @@ export async function POST(request: Request) {
         return errorResponse(
           request,
           `上传第 ${i + 1} 张图片失败：${uploadError.message}`,
-          400,
-          returnHref
+          400
         )
       }
 
@@ -160,7 +155,7 @@ export async function POST(request: Request) {
       .single()
 
     if (insertError) {
-      return errorResponse(request, insertError.message, 400, returnHref)
+      return errorResponse(request, insertError.message, 400)
     }
 
     if (!wantsJsonResponse(request)) {
