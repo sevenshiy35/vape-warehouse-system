@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 function sanitizeNext(value: string | null) {
   if (!value) return "/admin/orders";
@@ -15,8 +14,6 @@ function sanitizeNext(value: string | null) {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [next, setNext] = useState("/admin/orders");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -48,8 +45,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(next);
-      router.refresh();
+      window.location.assign(next);
     } catch {
       setError("登录失败，请稍后再试");
       setLoading(false);
