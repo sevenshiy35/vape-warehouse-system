@@ -353,11 +353,11 @@ export default function OrdersTable({ orders, filters }: Props) {
                 <SortHeader label="状态" sortKey="status" filters={filters} />
               </th>
 
-              <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+              <th className="w-24 whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
                 <SortHeader label="商品数" sortKey="total_items" filters={filters} />
               </th>
 
-              <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+              <th className="w-20 whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
                 截图
               </th>
 
@@ -410,11 +410,11 @@ export default function OrdersTable({ orders, filters }: Props) {
                   </span>
                   </td>
 
-                  <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                  <td className="w-24 whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
                     {order.total_items ?? '-'}
                   </td>
 
-                  <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                  <td className="w-20 whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
                     {getImageCount(order)}
                   </td>
 
