@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   getInventoryRecord,
@@ -44,19 +44,6 @@ function getQueryStatus(value: string | null): InventoryStatusFilter {
   return statusFilters.includes(value as InventoryStatusFilter)
     ? (value as InventoryStatusFilter)
     : '全部'
-}
-
-function setFormFieldValue(form: HTMLFormElement, name: string, value: string) {
-  const field = form.elements.namedItem(name)
-
-  if (field instanceof RadioNodeList) {
-    field.value = value
-    return
-  }
-
-  if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
-    field.value = value
-  }
 }
 
 function getStatus(product: InventoryProduct) {
@@ -128,7 +115,6 @@ function SortHeader({
 
 export default function InventoryTable({ products }: Props) {
   const searchParams = useSearchParams()
-  const filterFormRef = useRef<HTMLFormElement | null>(null)
   const [search, setSearch] = useState(() => searchParams.get('q') || '')
   const [brandFilter, setBrandFilter] = useState(
     () => searchParams.get('brand') || '全部'
@@ -218,20 +204,14 @@ export default function InventoryTable({ products }: Props) {
     syncFilterUrl(cleanFilters)
   }
 
-  function getFormFilters(form: HTMLFormElement): InventoryFilterState {
-    const formData = new FormData(form)
-
-    return {
-      q: String(formData.get('q') || ''),
-      brand: String(formData.get('brand') || '全部'),
-      status: getQueryStatus(String(formData.get('status') || '全部')),
-      location: String(formData.get('location') || ''),
-    }
-  }
-
-  function handleFilterSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    applyFilters(getFormFilters(event.currentTarget))
+  function updateFilters(nextFilters: Partial<InventoryFilterState>) {
+    applyFilters({
+      q: search,
+      brand: brandFilter,
+      status: statusFilter,
+      location: locationSearch,
+      ...nextFilters,
+    })
   }
 
   function handleSort(key: SortKey) {
@@ -341,13 +321,6 @@ export default function InventoryTable({ products }: Props) {
       location: '',
     }
 
-    if (filterFormRef.current) {
-      setFormFieldValue(filterFormRef.current, 'q', nextFilters.q)
-      setFormFieldValue(filterFormRef.current, 'brand', nextFilters.brand)
-      setFormFieldValue(filterFormRef.current, 'status', nextFilters.status)
-      setFormFieldValue(filterFormRef.current, 'location', nextFilters.location)
-    }
-
     applyFilters(nextFilters)
   }
 
@@ -357,8 +330,7 @@ export default function InventoryTable({ products }: Props) {
   return (
     <div className="space-y-4">
       <form
-        ref={filterFormRef}
-        onSubmit={handleFilterSubmit}
+        onSubmit={(event) => event.preventDefault()}
         className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -369,7 +341,8 @@ export default function InventoryTable({ products }: Props) {
             <input
               name="q"
               className={inputClass}
-              defaultValue={search}
+              value={search}
+              onChange={(event) => updateFilters({ q: event.target.value })}
               placeholder="SKU / 中文 / 英文 / 展示名"
             />
           </div>
@@ -381,7 +354,8 @@ export default function InventoryTable({ products }: Props) {
             <select
               name="brand"
               className={inputClass}
-              defaultValue={brandFilter}
+              value={brandFilter}
+              onChange={(event) => updateFilters({ brand: event.target.value })}
             >
               {brands.map((brand) => (
                 <option key={brand} value={brand}>
@@ -398,7 +372,10 @@ export default function InventoryTable({ products }: Props) {
             <input
               name="location"
               className={inputClass}
-              defaultValue={locationSearch}
+              value={locationSearch}
+              onChange={(event) =>
+                updateFilters({ location: event.target.value })
+              }
               placeholder="例如 A1 / B2 / SP区"
             />
           </div>
@@ -422,7 +399,8 @@ export default function InventoryTable({ products }: Props) {
                   type="radio"
                   name="status"
                   value={status}
-                  defaultChecked={status === statusFilter}
+                  checked={status === statusFilter}
+                  onChange={() => updateFilters({ status })}
                   className="peer sr-only"
                 />
                 <span
@@ -447,13 +425,6 @@ export default function InventoryTable({ products }: Props) {
           </p>
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="submit"
-              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
-            >
-              应用筛选
-            </button>
-
             <button
               type="button"
               onClick={resetFilters}
