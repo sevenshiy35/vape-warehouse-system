@@ -240,16 +240,6 @@ export function redirectTo(location: string) {
   })
 }
 
-export function withMessage(
-  href: string,
-  type: 'success' | 'error',
-  message: string
-) {
-  const url = new URL(href, 'http://local')
-  url.searchParams.set(type, message)
-  return `${url.pathname}${url.search}`
-}
-
 export function getOrderStatusLabel(status: string) {
   if (status === 'uploaded') return '已上传'
   if (status === 'need_review') return '待确认'

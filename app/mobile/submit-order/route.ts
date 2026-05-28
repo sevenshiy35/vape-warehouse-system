@@ -5,7 +5,6 @@ import {
   getFileExt,
   htmlResponse,
   redirectTo,
-  withMessage,
 } from '../_lib'
 
 export const dynamic = 'force-dynamic'
@@ -118,9 +117,7 @@ export async function POST(request: Request) {
       return formHtml(insertError?.message || '创建订单失败')
     }
 
-    return redirectTo(
-      withMessage(`/mobile/orders/${order.id}`, 'success', '订单创建成功')
-    )
+    return redirectTo(`/admin/orders/${order.id}`)
   } catch (error: unknown) {
     return formHtml(getErrorMessage(error, '创建订单失败'))
   }

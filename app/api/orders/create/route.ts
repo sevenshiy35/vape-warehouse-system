@@ -167,9 +167,7 @@ export async function POST(request: Request) {
       return new NextResponse(null, {
         status: 303,
         headers: {
-          Location: isMobileSubmit
-            ? `/mobile/orders/${order.id}`
-            : `/admin/orders/${order.id}`,
+          Location: `/admin/orders/${order.id}`,
         },
       })
     }
