@@ -27,6 +27,16 @@ type SortDirection = 'asc' | 'desc'
 
 const statusFilters = ['全部', 'OK', '低库存', '无库存', '缺少库位'] as const
 
+const sortOptions: { value: SortKey; label: string }[] = [
+  { value: 'brand', label: '品牌' },
+  { value: 'sku', label: 'SKU' },
+  { value: 'product_name_cn', label: '中文名' },
+  { value: 'display_name', label: '展示名' },
+  { value: 'shelf_location', label: '库位' },
+  { value: 'quantity_on_hand', label: '库存' },
+  { value: 'status', label: '状态' },
+]
+
 type InventoryStatusFilter = (typeof statusFilters)[number]
 
 type InventoryFilterState = {
@@ -437,6 +447,45 @@ export default function InventoryTable({ products }: Props) {
       </form>
 
       <div className="space-y-3 md:hidden">
+        <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                排序
+              </label>
+              <select
+                className={inputClass}
+                value={sortKey}
+                onChange={(event) => {
+                  setSortKey(event.target.value as SortKey)
+                  setSortDirection('asc')
+                }}
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                顺序
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                }
+                className="inline-flex min-h-10 min-w-20 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                {sortDirection === 'asc' ? '升序' : '降序'}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {sortedProducts.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
             没有符合条件的库存
