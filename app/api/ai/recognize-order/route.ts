@@ -13,7 +13,7 @@ const RecognizedOrderSchema = z.object({
       rawText: z.string(),
       displayName: z.string(),
       quantity: z.number().int(),
-      unit: z.enum(['支', '盒', '个', '未知']),
+      unit: z.enum(['支', '盒', '条', '个', '未知']),
       confidence: z.number(),
     })
   ),
@@ -414,7 +414,8 @@ export async function POST(request: Request) {
 3. 如果同一个商品在多张图里重复出现，只保留一次，不要重复计算。
 4. 如果两张图是不同商品列表，合并输出所有商品。
 5. Yohuu烟弹如果显示1盒，quantity=1，unit=盒，不要换算。
-6. Price x qty: 14x5, $14 x 5, ¥14*5 => quantity=5. Prefer x5/×5/qty5/5支/5盒. Never use price, total, shipping, phone, address as quantity.
+6. 真烟displayName含“整条”：quantity=条数，unit=条；1条=10包由系统换算。
+7. Price x qty: 14x5, $14 x 5, ¥14*5 => quantity=5. Prefer x5/×5/qty5/5支/5盒/5条. Never use price, total, shipping, phone, address as quantity.
         `.trim(),
       },
     ]

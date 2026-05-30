@@ -9,7 +9,7 @@ type RecognizedItem = {
   brand: string | null
   productName: string
   quantity: number
-  unit: '支' | '盒' | '个' | '未知'
+  unit: '支' | '盒' | '条' | '个' | '未知'
   confidence: number
   note: string | null
 

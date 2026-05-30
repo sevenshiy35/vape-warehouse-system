@@ -148,11 +148,12 @@ export default function EditOrderItemButton({
                 >
                   <option value="支">支</option>
                   <option value="盒">盒</option>
+                  <option value="条">条</option>
                 </select>
               </div>
 
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                如果商品是 Yohuu烟弹，并且单位选择“盒”，系统会自动按 1盒 = 实际拣货3 计算。
+                选择“盒”或“条”时，系统会按商品设置的拣货倍数计算实际库存扣减。
               </p>
             </div>
 
