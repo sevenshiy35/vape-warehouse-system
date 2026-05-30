@@ -43,6 +43,21 @@ type Props = {
   status: string
 }
 
+const blockedRecognitionStatuses = new Set([
+  'picking',
+  'picking_editing',
+  'completed',
+  'cancelled',
+])
+
+function getBlockedRecognitionMessage(status: string) {
+  if (status === 'picking') return '拣货中订单不能使用AI识别'
+  if (status === 'picking_editing') return '拣货修改中订单不能使用AI识别'
+  if (status === 'completed') return '已完成订单不能使用AI识别'
+  if (status === 'cancelled') return '已取消订单不能使用AI识别'
+  return '当前订单状态不能使用AI识别'
+}
+
 function getStatusClass(status: RecognizedItem['matchStatus']) {
   if (status === 'matched') {
     return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
@@ -66,13 +81,8 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
   const [addedKeys, setAddedKeys] = useState<Record<string, boolean>>({})
 
   async function handleRecognize() {
-    if (status === 'completed') {
-      notify({ type: 'warning', title: '已完成订单不建议重新识别' })
-      return
-    }
-
-    if (status === 'cancelled') {
-      notify({ type: 'warning', title: '已取消订单不能识别' })
+    if (blockedRecognitionStatuses.has(status)) {
+      notify({ type: 'warning', title: getBlockedRecognitionMessage(status) })
       return
     }
 
@@ -202,13 +212,15 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
   const matchedCount =
     result?.items.filter((item) => item.matchStatus === 'matched' && item.productId)
       .length || 0
+  const recognitionBlocked = blockedRecognitionStatuses.has(status)
 
   return (
     <>
       <button
         type="button"
         onClick={handleRecognize}
-        disabled={loading || status === 'cancelled'}
+        disabled={loading || recognitionBlocked}
+        title={recognitionBlocked ? getBlockedRecognitionMessage(status) : undefined}
         className="rounded bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700 disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-400"
       >
         {loading ? '识别中...' : 'AI识别订单'}

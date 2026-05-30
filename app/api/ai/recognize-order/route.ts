@@ -54,6 +54,21 @@ type OrderRecognitionContent =
       }
     }
 
+const blockedRecognitionStatuses = new Set([
+  'picking',
+  'picking_editing',
+  'completed',
+  'cancelled',
+])
+
+function getBlockedRecognitionMessage(status: string) {
+  if (status === 'picking') return '拣货中订单不能使用AI识别'
+  if (status === 'picking_editing') return '拣货修改中订单不能使用AI识别'
+  if (status === 'completed') return '已完成订单不能使用AI识别'
+  if (status === 'cancelled') return '已取消订单不能使用AI识别'
+  return '当前订单状态不能使用AI识别'
+}
+
 function getMimeType(path: string, fallback?: string) {
   if (fallback && fallback !== 'application/octet-stream') {
     return fallback
@@ -341,7 +356,7 @@ export async function POST(request: Request) {
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('id, order_no, image_path, image_paths')
+      .select('id, order_no, status, image_path, image_paths')
       .eq('id', orderId)
       .single()
 
@@ -349,6 +364,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: orderError?.message || 'Order not found' },
         { status: 404 }
+      )
+    }
+
+    if (blockedRecognitionStatuses.has(order.status)) {
+      return NextResponse.json(
+        { error: getBlockedRecognitionMessage(order.status) },
+        { status: 400 }
       )
     }
 
