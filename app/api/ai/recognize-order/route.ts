@@ -56,14 +56,12 @@ type OrderRecognitionContent =
 
 const blockedRecognitionStatuses = new Set([
   'picking',
-  'picking_editing',
   'completed',
   'cancelled',
 ])
 
 function getBlockedRecognitionMessage(status: string) {
   if (status === 'picking') return '拣货中订单不能使用AI识别'
-  if (status === 'picking_editing') return '拣货修改中订单不能使用AI识别'
   if (status === 'completed') return '已完成订单不能使用AI识别'
   if (status === 'cancelled') return '已取消订单不能使用AI识别'
   return '当前订单状态不能使用AI识别'
