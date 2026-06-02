@@ -22,6 +22,43 @@ type PageProps = {
   }>
 }
 
+const orderFlowSteps = [
+  {
+    key: 'uploaded',
+    label: '已上传',
+    description: '截图与地址已提交',
+    statuses: ['uploaded'],
+  },
+  {
+    key: 'review',
+    label: '核对商品',
+    description: '识别或手动添加商品',
+    statuses: ['need_review'],
+  },
+  {
+    key: 'picking',
+    label: '拣货中',
+    description: '库存已预扣',
+    activeLabel: '修改中',
+    activeDescription: '保存修改后继续拣货',
+    statuses: ['picking', 'picking_editing'],
+  },
+  {
+    key: 'completed',
+    label: '已完成',
+    description: '拣货结束',
+    statuses: ['completed'],
+  },
+]
+
+function getOrderFlowIndex(status: string) {
+  const index = orderFlowSteps.findIndex((step) =>
+    step.statuses.includes(status)
+  )
+
+  return index >= 0 ? index : 0
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
 
@@ -225,6 +262,76 @@ export default async function OrderDetailPage({ params }: PageProps) {
           </>
         }
       />
+
+      <Panel className="mb-6">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">订单流程</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              当前状态：{getOrderStatusLabel(order.status)}
+            </p>
+          </div>
+
+          {order.status === 'cancelled' && (
+            <span className="inline-flex w-fit rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
+              订单已取消
+            </span>
+          )}
+        </div>
+
+        <ol className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          {orderFlowSteps.map((step, index) => {
+            const currentIndex = getOrderFlowIndex(order.status)
+            const isCancelled = order.status === 'cancelled'
+            const isActive = !isCancelled && index === currentIndex
+            const isDone = !isCancelled && index < currentIndex
+            const label =
+              isActive && order.status === 'picking_editing'
+                ? step.activeLabel ?? step.label
+                : step.label
+            const description =
+              isActive && order.status === 'picking_editing'
+                ? step.activeDescription ?? step.description
+                : step.description
+
+            const circleClass = isActive
+              ? 'border-blue-600 bg-blue-600 text-white dark:border-blue-400 dark:bg-blue-500'
+              : isDone
+              ? 'border-green-600 bg-green-600 text-white dark:border-green-400 dark:bg-green-500'
+              : 'border-gray-300 bg-white text-gray-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-400'
+
+            const itemClass = isActive
+              ? 'border-blue-200 bg-blue-50 dark:border-blue-900/60 dark:bg-blue-950/40'
+              : isDone
+              ? 'border-green-200 bg-green-50 dark:border-green-900/60 dark:bg-green-950/30'
+              : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900'
+
+            return (
+              <li
+                key={step.key}
+                className={`rounded-lg border p-3 ${itemClass}`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${circleClass}`}
+                  >
+                    {isDone ? '✓' : index + 1}
+                  </span>
+
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-950 dark:text-gray-50">
+                      {label}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      </Panel>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Panel>
