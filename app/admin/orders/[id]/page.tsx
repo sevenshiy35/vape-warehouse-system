@@ -343,7 +343,21 @@ export default async function OrderDetailPage({ params }: PageProps) {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold">订单商品明细</h2>
 
-              <ConfirmOrderButton orderId={order.id} status={order.status} />
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <ConfirmOrderButton orderId={order.id} status={order.status} />
+
+                {(order.status === 'picking' ||
+                  order.status === 'picking_editing') && (
+                  <NavButton
+                    href={`/admin/picking?orderId=${encodeURIComponent(
+                      order.id
+                    )}#order-selector`}
+                    variant="primary"
+                  >
+                    进入拣货列表
+                  </NavButton>
+                )}
+              </div>
             </div>
 
             {itemsError && (
