@@ -22,8 +22,10 @@ export default function CancelOrderButton({ orderId, status }: Props) {
 
     const message =
       status === 'completed'
-        ? '这个订单已经完成。确认取消后，系统会把本单商品库存加回去，并写入 OrderReversal 流水。确认取消吗？'
-        : '确认取消这个订单吗？未完成订单不会影响库存。'
+        ? '这个订单已经完成。确认取消后，系统会退回本单已扣减的库存，并写入 OrderReversal 流水。确认取消吗？'
+        : status === 'picking' || status === 'picking_editing'
+        ? '这个订单已经预扣库存。确认取消后，系统会退回本单已预扣的库存，并写入 OrderReversal 流水。确认取消吗？'
+        : '确认取消这个订单吗？当前订单尚未预扣库存。'
 
     const ok = await confirm({
       title: '确认取消订单？',

@@ -473,6 +473,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
             <AddOrderItemForm
               orderId={order.id}
+              orderStatus={order.status}
               products={(products || []) as ProductWithInventory[]}
             />
           </section>

@@ -69,7 +69,8 @@ export default function DeleteOrderItemButton({ itemId, orderStatus }: Props) {
   function getDisabledTitle() {
     if (orderStatus === 'completed') return '已完成订单不能删除'
     if (orderStatus === 'cancelled') return '已取消订单不能删除'
-    if (orderStatus === 'picking') return '拣货中订单不能删除'
+    if (orderStatus === 'picking') return '删除后会退回已预扣库存，并进入拣货修改中'
+    if (orderStatus === 'picking_editing') return '删除后会退回已预扣库存'
     return '删除商品'
   }
 

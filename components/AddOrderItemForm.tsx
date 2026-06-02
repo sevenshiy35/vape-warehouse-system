@@ -9,9 +9,14 @@ import type { ProductWithInventory } from '@/lib/types'
 type Props = {
   orderId: string
   products: ProductWithInventory[]
+  orderStatus: string
 }
 
-export default function AddOrderItemForm({ orderId, products }: Props) {
+export default function AddOrderItemForm({
+  orderId,
+  products,
+  orderStatus,
+}: Props) {
   const router = useRouter()
   const { notify } = useFeedback()
 
@@ -19,12 +24,18 @@ export default function AddOrderItemForm({ orderId, products }: Props) {
   const [qty, setQty] = useState(1)
   const [unit, setUnit] = useState('支')
   const [loading, setLoading] = useState(false)
+  const locked = orderStatus === 'completed' || orderStatus === 'cancelled'
 
   const inputClass =
     'w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500'
 
   async function handleAddItem(e: React.FormEvent) {
     e.preventDefault()
+
+    if (locked) {
+      notify({ type: 'warning', title: '当前订单状态不能添加商品' })
+      return
+    }
 
     if (!productId) {
       notify({ type: 'warning', title: '请选择商品' })
@@ -119,7 +130,8 @@ export default function AddOrderItemForm({ orderId, products }: Props) {
       </p>
 
       <button
-        disabled={loading}
+        disabled={loading || locked}
+        title={locked ? '已完成或已取消订单不能添加商品' : undefined}
         className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-300"
       >
         {loading ? '添加中...' : '添加商品'}

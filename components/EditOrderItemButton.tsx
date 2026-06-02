@@ -83,7 +83,8 @@ export default function EditOrderItemButton({
   function getDisabledTitle() {
     if (orderStatus === 'completed') return '已完成订单不能修改'
     if (orderStatus === 'cancelled') return '已取消订单不能修改'
-    if (orderStatus === 'picking') return '拣货中订单不能修改'
+    if (orderStatus === 'picking') return '修改后会同步调整预扣库存，并进入拣货修改中'
+    if (orderStatus === 'picking_editing') return '修改后会同步调整预扣库存'
     return '修改数量'
   }
 
