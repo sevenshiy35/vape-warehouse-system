@@ -340,7 +340,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
         <div className="mt-6 space-y-6">
           <Panel>
-            <h2 className="mb-4 text-lg font-semibold">订单商品明细</h2>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold">订单商品明细</h2>
+
+              <ConfirmOrderButton orderId={order.id} status={order.status} />
+            </div>
 
             {itemsError && (
               <p className="mb-3 text-red-600 dark:text-red-400">
