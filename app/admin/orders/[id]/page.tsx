@@ -343,7 +343,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold">订单商品明细</h2>
 
-              <div className="flex flex-wrap gap-2 sm:justify-end">
+              <div className="flex flex-col gap-2 [&>a]:w-full [&>button]:w-full sm:flex-row sm:flex-wrap sm:justify-end sm:[&>a]:w-auto sm:[&>button]:w-auto">
                 <ConfirmOrderButton orderId={order.id} status={order.status} />
 
                 {(order.status === 'picking' ||
