@@ -151,6 +151,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
     }
   }
 
+  const totalPickQty = (items || []).reduce(
+    (sum, item) => sum + Number(item.pick_qty || 0),
+    0
+  )
+
   function getOrderStatusClass(status: string) {
     if (status === 'completed') {
       return 'inline-block rounded bg-green-100 px-2 py-1 text-green-800 dark:bg-green-900/40 dark:text-green-300'
@@ -448,7 +453,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
         <div className="mt-6 space-y-6">
           <Panel>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-semibold">订单商品明细</h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-lg font-semibold">订单商品明细</h2>
+                <span className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                  总数：{totalPickQty}
+                </span>
+              </div>
 
               <div className="flex flex-col gap-2 [&>a]:w-full [&>button]:w-full sm:flex-row sm:flex-wrap sm:justify-end sm:[&>a]:w-auto sm:[&>button]:w-auto">
                 <ConfirmOrderButton orderId={order.id} status={order.status} />
