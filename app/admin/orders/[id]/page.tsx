@@ -59,6 +59,24 @@ function getOrderFlowIndex(status: string) {
   return index >= 0 ? index : 0
 }
 
+function getOrderActionVisibility(status: string) {
+  const isEditable = status !== 'completed' && status !== 'cancelled'
+  const isReviewing = status === 'uploaded' || status === 'need_review'
+  const isPicking = status === 'picking'
+  const isPickingEditing = status === 'picking_editing'
+
+  return {
+    canRecognize: isReviewing || isPickingEditing,
+    canEditInfo: isEditable,
+    canConfirm: isReviewing,
+    canOpenPicking: isPicking || isPickingEditing,
+    canCompletePicking: isPicking,
+    canSavePickingEdit: isPickingEditing,
+    canCancel: status !== 'cancelled',
+    canEditItems: isEditable,
+  }
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
 
@@ -155,6 +173,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
     (sum, item) => sum + Number(item.pick_qty || 0),
     0
   )
+  const orderActions = getOrderActionVisibility(order.status)
 
   function getOrderStatusClass(status: string) {
     if (status === 'completed') {
@@ -225,20 +244,25 @@ export default async function OrderDetailPage({ params }: PageProps) {
         description={`OrderID: ${order.order_no}`}
         actions={
           <>
-            <RecognizeOrderButton orderId={order.id} status={order.status} />
+            {orderActions.canRecognize && (
+              <RecognizeOrderButton orderId={order.id} status={order.status} />
+            )}
 
-            <EditOrderInfoButton
-              orderId={order.id}
-              status={order.status}
-              currentCustomerName={order.customer_name}
-              currentAddress={order.address}
-              currentNote={order.note}
-            />
+            {orderActions.canEditInfo && (
+              <EditOrderInfoButton
+                orderId={order.id}
+                status={order.status}
+                currentCustomerName={order.customer_name}
+                currentAddress={order.address}
+                currentNote={order.note}
+              />
+            )}
 
-            <ConfirmOrderButton orderId={order.id} status={order.status} />
+            {orderActions.canConfirm && (
+              <ConfirmOrderButton orderId={order.id} status={order.status} />
+            )}
 
-            {(order.status === 'picking' ||
-              order.status === 'picking_editing') && (
+            {orderActions.canOpenPicking && (
               <NavButton
                 href={`/admin/picking?orderId=${encodeURIComponent(
                   order.id
@@ -249,21 +273,23 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </NavButton>
             )}
 
-            {order.status === 'picking' && (
+            {orderActions.canCompletePicking && (
               <CompletePickingButton
                 orderId={order.id}
                 status={order.status}
               />
             )}
 
-            {order.status === 'picking_editing' && (
+            {orderActions.canSavePickingEdit && (
               <SavePickingEditButton
                 orderId={order.id}
                 status={order.status}
               />
             )}
 
-            <CancelOrderButton orderId={order.id} status={order.status} />
+            {orderActions.canCancel && (
+              <CancelOrderButton orderId={order.id} status={order.status} />
+            )}
           </>
         }
       />
@@ -461,10 +487,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
 
               <div className="flex flex-col gap-2 [&>a]:w-full [&>button]:w-full sm:flex-row sm:flex-wrap sm:justify-end sm:[&>a]:w-auto sm:[&>button]:w-auto">
-                <ConfirmOrderButton orderId={order.id} status={order.status} />
+                {orderActions.canConfirm && (
+                  <ConfirmOrderButton
+                    orderId={order.id}
+                    status={order.status}
+                  />
+                )}
 
-                {(order.status === 'picking' ||
-                  order.status === 'picking_editing') && (
+                {orderActions.canOpenPicking && (
                   <NavButton
                     href={`/admin/picking?orderId=${encodeURIComponent(
                       order.id
@@ -577,19 +607,25 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         </td>
 
                         <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
-                          <div className="flex items-center gap-2">
-                            <EditOrderItemButton
-                              itemId={item.id}
-                              orderStatus={order.status}
-                              currentQty={item.recognized_qty}
-                              currentUnit={item.recognized_unit || '支'}
-                            />
+                          {orderActions.canEditItems ? (
+                            <div className="flex items-center gap-2">
+                              <EditOrderItemButton
+                                itemId={item.id}
+                                orderStatus={order.status}
+                                currentQty={item.recognized_qty}
+                                currentUnit={item.recognized_unit || '支'}
+                              />
 
-                            <DeleteOrderItemButton
-                              itemId={item.id}
-                              orderStatus={order.status}
-                            />
-                          </div>
+                              <DeleteOrderItemButton
+                                itemId={item.id}
+                                orderStatus={order.status}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 dark:text-gray-500">
+                              -
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -606,11 +642,13 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </p>
             )}
 
-            <AddOrderItemForm
-              orderId={order.id}
-              orderStatus={order.status}
-              products={(products || []) as ProductWithInventory[]}
-            />
+            {orderActions.canEditItems && (
+              <AddOrderItemForm
+                orderId={order.id}
+                orderStatus={order.status}
+                products={(products || []) as ProductWithInventory[]}
+              />
+            )}
           </section>
         </div>
     </PageShell>
