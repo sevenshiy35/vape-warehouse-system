@@ -374,6 +374,13 @@ export default function PickingListClient({
               </div>
 
               <div>
+                <p className="text-gray-500 dark:text-gray-400">本单总数量</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                  {totalPickQty}
+                </p>
+              </div>
+
+              <div>
                 <p className="text-gray-500 dark:text-gray-400">地址</p>
                 <p className="text-lg font-semibold">
                   {selectedOrder.address || '-'}
