@@ -262,17 +262,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
               <ConfirmOrderButton orderId={order.id} status={order.status} />
             )}
 
-            {orderActions.canOpenPicking && (
-              <NavButton
-                href={`/admin/picking?orderId=${encodeURIComponent(
-                  order.id
-                )}#order-selector`}
-                variant="primary"
-              >
-                进入拣货列表
-              </NavButton>
-            )}
-
             {orderActions.canCompletePicking && (
               <CompletePickingButton
                 orderId={order.id}
