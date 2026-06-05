@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getErrorMessage } from '@/lib/errors'
 import {
@@ -43,6 +43,7 @@ function getFileKey(file: File) {
 export default function SubmitOrderPage() {
   const router = useRouter()
   const { notify } = useFeedback()
+  const fileInputId = useId()
   const formRef = useRef<HTMLFormElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const previewUrlsRef = useRef<string[]>([])
@@ -231,16 +232,30 @@ export default function SubmitOrderPage() {
                 订单截图
               </label>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                name="images"
-                accept="image/*"
-                multiple
-                onChange={(e) => handleFilesChange(e.target.files)}
-                onInput={(e) => handleFilesChange(e.currentTarget.files)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 file:mr-4 file:rounded-lg file:border-0 file:bg-gray-900 file:px-3 file:py-1.5 file:text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:file:bg-gray-100 dark:file:text-gray-900"
-              />
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-950">
+                <input
+                  id={fileInputId}
+                  ref={fileInputRef}
+                  type="file"
+                  name="images"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleFilesChange(e.target.files)}
+                  onInput={(e) => handleFilesChange(e.currentTarget.files)}
+                  className="sr-only"
+                />
+
+                <label
+                  htmlFor={fileInputId}
+                  className="flex min-h-14 w-full cursor-pointer items-center justify-center rounded-lg bg-black px-4 py-3 text-base font-semibold text-white active:scale-[0.99] dark:bg-gray-100 dark:text-gray-900"
+                >
+                  选择订单截图
+                </label>
+
+                <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+                  可以拍照或从相册选择，多张截图可一次选择。
+                </p>
+              </div>
 
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 支持一单多张截图。选错图片时，可以在下方单独删除，不用重新选择全部文件。
