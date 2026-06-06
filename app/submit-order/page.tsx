@@ -186,7 +186,7 @@ export default function SubmitOrderPage() {
       notify({
         type: 'success',
         title: '订单创建成功',
-        message: `OrderID：${data.order.order_no}`,
+        message: `OrderID：${data.order.order_no}，后台正在AI识别`,
       })
       router.refresh()
     } catch (err: unknown) {
@@ -409,6 +409,9 @@ export default function SubmitOrderPage() {
               <h2 className="text-lg font-semibold text-green-800 dark:text-green-300">
                 订单创建成功
               </h2>
+              <p className="mt-2 text-sm text-green-800 dark:text-green-200">
+                后台正在AI识别商品，匹配成功的商品会自动加入订单。进入订单详情后等待片刻刷新即可核对。
+              </p>
 
               <div className="mt-3 space-y-2 text-sm text-green-800 dark:text-green-200">
                 <p>

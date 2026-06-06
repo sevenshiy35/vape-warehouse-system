@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { getErrorMessage } from '@/lib/errors'
+import { recognizeAndAutoAddOrder } from '@/lib/orderRecognition'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60
 
 function wantsJsonResponse(request: Request) {
   const accept = request.headers.get('accept') || ''
@@ -148,15 +151,29 @@ export async function POST(request: Request) {
         image_path: uploadedPaths[0],
         image_paths: uploadedPaths,
         status: 'uploaded',
+        ai_status: 'not_started',
+        ai_error: null,
+        ai_processed_at: null,
       })
       .select(
-        'id, order_no, address, note, status, image_path, image_paths'
+        'id, order_no, address, note, status, image_path, image_paths, ai_status'
       )
       .single()
 
     if (insertError) {
       return errorResponse(request, insertError.message, 400)
     }
+
+    after(async () => {
+      try {
+        await recognizeAndAutoAddOrder(order.id)
+      } catch (error: unknown) {
+        console.error(
+          `Background AI recognition failed for order ${order.id}:`,
+          error
+        )
+      }
+    })
 
     if (!wantsJsonResponse(request)) {
       return new NextResponse(null, {
@@ -169,6 +186,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      aiQueued: true,
       order,
     })
   } catch (error: unknown) {

@@ -59,16 +59,17 @@ function getOrderFlowIndex(status: string) {
   return index >= 0 ? index : 0
 }
 
-function getOrderActionVisibility(status: string) {
+function getOrderActionVisibility(status: string, aiStatus?: string | null) {
   const isEditable = status !== 'completed' && status !== 'cancelled'
   const isReviewing = status === 'uploaded' || status === 'need_review'
   const isPicking = status === 'picking'
   const isPickingEditing = status === 'picking_editing'
+  const isAiProcessing = aiStatus === 'processing'
 
   return {
-    canRecognize: isReviewing || isPickingEditing,
+    canRecognize: (isReviewing || isPickingEditing) && !isAiProcessing,
     canEditInfo: isEditable,
-    canConfirm: isReviewing,
+    canConfirm: isReviewing && !isAiProcessing,
     canOpenPicking: isPicking || isPickingEditing,
     canCompletePicking: isPicking,
     canSavePickingEdit: isPickingEditing,
@@ -83,7 +84,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const { data: order, error } = await supabaseAdmin
     .from('orders')
     .select(
-      'id, order_no, order_type, customer_name, address, note, status, image_path, image_paths, created_at'
+      'id, order_no, order_type, customer_name, address, note, status, image_path, image_paths, ai_status, ai_error, ai_processed_at, ai_raw_result, created_at'
     )
     .eq('id', id)
     .single()
@@ -173,7 +174,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
     (sum, item) => sum + Number(item.pick_qty || 0),
     0
   )
-  const orderActions = getOrderActionVisibility(order.status)
+  const orderActions = getOrderActionVisibility(
+    order.status,
+    order.ai_status
+  )
 
   function getOrderStatusClass(status: string) {
     if (status === 'completed') {
@@ -232,6 +236,55 @@ export default async function OrderDetailPage({ params }: PageProps) {
     if (status === 'not_found') return '未匹配'
     return status
   }
+
+  function getAiStatusLabel(status: string | null | undefined) {
+    if (status === 'processing') return '识别中'
+    if (status === 'completed') return '已完成'
+    if (status === 'failed') return '识别失败'
+    return '未开始'
+  }
+
+  function getAiStatusClass(status: string | null | undefined) {
+    if (status === 'processing') {
+      return 'inline-block rounded bg-blue-100 px-2 py-1 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+    }
+
+    if (status === 'completed') {
+      return 'inline-block rounded bg-green-100 px-2 py-1 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+    }
+
+    if (status === 'failed') {
+      return 'inline-block rounded bg-red-100 px-2 py-1 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+    }
+
+    return 'inline-block rounded bg-gray-100 px-2 py-1 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+
+  function getAutoAddSummary(value: unknown) {
+    if (!value || typeof value !== 'object' || !('autoAdd' in value)) {
+      return null
+    }
+
+    const autoAdd = (value as { autoAdd?: unknown }).autoAdd
+
+    if (!autoAdd || typeof autoAdd !== 'object') return null
+
+    const summary = autoAdd as {
+      attempted?: unknown
+      added?: unknown
+      skipped?: unknown
+      failed?: unknown
+    }
+
+    return {
+      attempted: Number(summary.attempted || 0),
+      added: Number(summary.added || 0),
+      skipped: Number(summary.skipped || 0),
+      failed: Number(summary.failed || 0),
+    }
+  }
+
+  const autoAddSummary = getAutoAddSummary(order.ai_raw_result)
 
   return (
     <PageShell>
@@ -388,6 +441,39 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 <span className={getOrderStatusClass(order.status)}>
                   {getOrderStatusLabel(order.status)}
                 </span>
+              </div>
+
+              <div>
+                <p className="text-gray-500 dark:text-gray-400">AI识别</p>
+                <div className="mt-1 space-y-1">
+                  <span className={getAiStatusClass(order.ai_status)}>
+                    {getAiStatusLabel(order.ai_status)}
+                  </span>
+
+                  {order.ai_status === 'processing' && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      后台正在识别商品，完成后会自动加入匹配成功的商品。
+                    </p>
+                  )}
+
+                  {autoAddSummary && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      自动加入 {autoAddSummary.added} 项
+                      {autoAddSummary.skipped > 0
+                        ? `，跳过 ${autoAddSummary.skipped} 项`
+                        : ''}
+                      {autoAddSummary.failed > 0
+                        ? `，失败 ${autoAddSummary.failed} 项`
+                        : ''}
+                    </p>
+                  )}
+
+                  {order.ai_error && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {order.ai_error}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
