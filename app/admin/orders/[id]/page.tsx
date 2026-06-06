@@ -79,6 +79,42 @@ function getOrderActionVisibility(status: string, aiStatus?: string | null) {
   }
 }
 
+type AiRawResult = {
+  items?: AiResultItem[]
+  warnings?: string[]
+  autoAdd?: {
+    attempted?: number
+    added?: number
+    skipped?: number
+    failed?: number
+    errors?: string[]
+  }
+  status?: string
+  error?: string
+}
+
+type AiResultItem = {
+  rawText?: string
+  productName?: string
+  quantity?: number
+  unit?: string
+  matchStatus?: string
+  matchScore?: number
+  matchReason?: string
+  sku?: string | null
+  matchedBrand?: string | null
+  displayName?: string | null
+  productNameCN?: string | null
+  productNameEN?: string | null
+  shelfLocation?: string | null
+  currentStock?: number | null
+  secondChoice?: {
+    sku?: string | null
+    name?: string | null
+    score?: number | null
+  } | null
+}
+
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params
 
@@ -285,6 +321,42 @@ export default async function OrderDetailPage({ params }: PageProps) {
     }
   }
 
+  function getAiRawResult(value: unknown): AiRawResult | null {
+    if (!value || typeof value !== 'object') return null
+
+    return value as AiRawResult
+  }
+
+  function getAiMatchStatusClass(status: string | null | undefined) {
+    if (status === 'matched') {
+      return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+    }
+
+    if (status === 'need_review') {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+    }
+
+    if (status === 'not_found') {
+      return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+    }
+
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  }
+
+  function getAiMatchStatusLabel(status: string | null | undefined) {
+    if (status === 'matched') return '已匹配'
+    if (status === 'need_review') return '需确认'
+    if (status === 'not_found') return '未匹配'
+    return status || '-'
+  }
+
+  const aiRawResult = getAiRawResult(order.ai_raw_result)
+  const aiResultItems = Array.isArray(aiRawResult?.items)
+    ? aiRawResult.items
+    : []
+  const aiWarnings = Array.isArray(aiRawResult?.warnings)
+    ? aiRawResult.warnings
+    : []
   const autoAddSummary = getAutoAddSummary(order.ai_raw_result)
 
   return (
@@ -553,6 +625,263 @@ export default async function OrderDetailPage({ params }: PageProps) {
         </div>
 
         <div className="mt-6 space-y-6">
+          <Panel>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">AI识别结果</h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  查看AI看到的文字、匹配分数、匹配到的商品和自动加入结果。
+                </p>
+              </div>
+
+              <span className={getAiStatusClass(order.ai_status)}>
+                {getAiStatusLabel(order.ai_status)}
+              </span>
+            </div>
+
+            {order.ai_status === 'processing' ? (
+              <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300">
+                后台正在识别商品，稍后刷新页面即可查看完整结果。
+              </p>
+            ) : order.ai_status === 'failed' ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+                <p className="font-medium">AI识别失败</p>
+                <p className="mt-1">{order.ai_error || aiRawResult?.error || '-'}</p>
+              </div>
+            ) : aiResultItems.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                暂无AI识别结果。
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {autoAddSummary && (
+                  <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
+                      <p className="text-gray-500 dark:text-gray-400">可自动加入</p>
+                      <p className="mt-1 text-xl font-bold">
+                        {autoAddSummary.attempted}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900/50 dark:bg-green-950/30">
+                      <p className="text-green-700 dark:text-green-300">已加入</p>
+                      <p className="mt-1 text-xl font-bold text-green-800 dark:text-green-200">
+                        {autoAddSummary.added}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900/50 dark:bg-yellow-950/30">
+                      <p className="text-yellow-700 dark:text-yellow-300">已跳过</p>
+                      <p className="mt-1 text-xl font-bold text-yellow-800 dark:text-yellow-200">
+                        {autoAddSummary.skipped}
+                      </p>
+                    </div>
+
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-900/50 dark:bg-red-950/30">
+                      <p className="text-red-700 dark:text-red-300">失败</p>
+                      <p className="mt-1 text-xl font-bold text-red-800 dark:text-red-200">
+                        {autoAddSummary.failed}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {aiWarnings.length > 0 && (
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-200">
+                    <p className="font-medium">提示</p>
+                    <ul className="mt-2 list-inside list-disc space-y-1">
+                      {aiWarnings.map((warning, index) => (
+                        <li key={`${warning}-${index}`}>{warning}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="hidden overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 md:block">
+                  <table className="w-full min-w-[1050px] text-xs">
+                    <thead className="bg-gray-100 dark:bg-gray-800">
+                      <tr>
+                        <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          AI原文
+                        </th>
+                        <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          数量
+                        </th>
+                        <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          状态
+                        </th>
+                        <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          分数
+                        </th>
+                        <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          匹配商品
+                        </th>
+                        <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          匹配原因
+                        </th>
+                        <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          第二候选
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {aiResultItems.map((item, index) => (
+                        <tr
+                          key={`${item.rawText || item.productName || 'ai'}-${index}`}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                        >
+                          <td className="border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            <div className="min-w-[180px]">
+                              <p className="font-medium">
+                                {item.rawText || '-'}
+                              </p>
+                              {item.productName && item.productName !== item.rawText && (
+                                <p className="mt-1 text-gray-500 dark:text-gray-400">
+                                  AI商品名：{item.productName}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="whitespace-nowrap border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            {item.quantity ?? '-'} {item.unit || ''}
+                          </td>
+
+                          <td className="whitespace-nowrap border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            <span
+                              className={`rounded px-2 py-1 ${getAiMatchStatusClass(
+                                item.matchStatus
+                              )}`}
+                            >
+                              {getAiMatchStatusLabel(item.matchStatus)}
+                            </span>
+                          </td>
+
+                          <td className="whitespace-nowrap border-b border-gray-200 p-3 align-top font-semibold dark:border-gray-800">
+                            {item.matchScore ?? '-'}
+                          </td>
+
+                          <td className="border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            <div className="min-w-[190px]">
+                              <p className="font-medium">
+                                {item.sku || '-'}
+                              </p>
+                              <p className="mt-1 text-gray-700 dark:text-gray-300">
+                                {item.displayName ||
+                                  item.productNameCN ||
+                                  item.productNameEN ||
+                                  '-'}
+                              </p>
+                              <p className="mt-1 text-gray-500 dark:text-gray-400">
+                                {item.matchedBrand || '-'} / 库位：
+                                {item.shelfLocation || '需要确认'}
+                              </p>
+                            </div>
+                          </td>
+
+                          <td className="border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            <p className="min-w-[180px] text-gray-700 dark:text-gray-300">
+                              {item.matchReason || '-'}
+                            </p>
+                          </td>
+
+                          <td className="border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            {item.secondChoice ? (
+                              <div className="min-w-[150px]">
+                                <p className="font-medium">
+                                  {item.secondChoice.sku || '-'}
+                                </p>
+                                <p className="mt-1 text-gray-500 dark:text-gray-400">
+                                  {item.secondChoice.name || '-'} / 分数：
+                                  {item.secondChoice.score ?? '-'}
+                                </p>
+                              </div>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="space-y-3 md:hidden">
+                  {aiResultItems.map((item, index) => (
+                    <div
+                      key={`${item.rawText || item.productName || 'ai'}-${index}`}
+                      className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-950"
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-base font-bold">
+                            {item.rawText || item.productName || '-'}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {item.quantity ?? '-'} {item.unit || ''}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded px-2 py-1 text-xs ${getAiMatchStatusClass(
+                            item.matchStatus
+                          )}`}
+                        >
+                          {getAiMatchStatusLabel(item.matchStatus)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
+                          <p className="text-gray-500 dark:text-gray-400">分数</p>
+                          <p className="mt-1 text-lg font-bold">
+                            {item.matchScore ?? '-'}
+                          </p>
+                        </div>
+
+                        <div className="rounded border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
+                          <p className="text-gray-500 dark:text-gray-400">SKU</p>
+                          <p className="mt-1 font-semibold">
+                            {item.sku || '-'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 space-y-2 text-sm">
+                        <p>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            匹配：
+                          </span>
+                          {item.displayName ||
+                            item.productNameCN ||
+                            item.productNameEN ||
+                            '-'}
+                        </p>
+                        <p>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            原因：
+                          </span>
+                          {item.matchReason || '-'}
+                        </p>
+                        {item.secondChoice && (
+                          <p>
+                            <span className="text-gray-500 dark:text-gray-400">
+                              第二候选：
+                            </span>
+                            {item.secondChoice.sku || '-'} /{' '}
+                            {item.secondChoice.name || '-'} / 分数：
+                            {item.secondChoice.score ?? '-'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Panel>
+
           <Panel>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap items-center gap-3">
