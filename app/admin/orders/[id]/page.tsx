@@ -65,9 +65,10 @@ function getOrderActionVisibility(status: string, aiStatus?: string | null) {
   const isPicking = status === 'picking'
   const isPickingEditing = status === 'picking_editing'
   const isAiProcessing = aiStatus === 'processing'
+  const aiCanRun = aiStatus !== 'processing' && aiStatus !== 'completed'
 
   return {
-    canRecognize: (isReviewing || isPickingEditing) && !isAiProcessing,
+    canRecognize: (isReviewing || isPickingEditing) && aiCanRun,
     canEditInfo: isEditable,
     canConfirm: isReviewing && !isAiProcessing,
     canOpenPicking: isPicking || isPickingEditing,

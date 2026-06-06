@@ -442,14 +442,21 @@ async function updateOrderAiResult(
     .eq('id', orderId)
 }
 
-export async function recognizeOrder(orderId: string) {
+export async function recognizeOrder(
+  orderId: string,
+  options: {
+    ignoreAiStatus?: boolean
+  } = {}
+) {
   if (!orderId) {
     throw new OrderRecognitionError('Missing orderId', 400)
   }
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from('orders')
-    .select('id, order_no, status, image_path, image_paths')
+    .select(
+      'id, order_no, status, image_path, image_paths, ai_status, ai_raw_result'
+    )
     .eq('id', orderId)
     .single()
 
@@ -465,6 +472,20 @@ export async function recognizeOrder(orderId: string) {
       getBlockedRecognitionMessage(order.status),
       400
     )
+  }
+
+  if (!options.ignoreAiStatus) {
+    if (order.ai_status === 'processing') {
+      throw new OrderRecognitionError('AI recognition is already running', 409)
+    }
+
+    if (order.ai_status === 'completed' && order.ai_raw_result) {
+      return {
+        orderNo: order.order_no,
+        result: order.ai_raw_result as OrderRecognitionResult,
+        cached: true,
+      }
+    }
   }
 
   const imagePaths =
@@ -663,26 +684,46 @@ export async function autoAddMatchedOrderItems(
 }
 
 export async function recognizeAndAutoAddOrder(orderId: string) {
-  await updateOrderAiResult(
-    orderId,
-    {
-      status: 'processing',
-      items: [],
-      warnings: [],
-      imageCount: 0,
-      imagePaths: [],
-    },
-    {
-      aiStatus: 'processing',
-      aiError: null,
-      aiProcessedAt: null,
+  const processingResult = {
+    status: 'processing',
+    items: [],
+    warnings: [],
+    imageCount: 0,
+    imagePaths: [],
+  }
+
+  const { data: claimedOrder, error: claimError } = await supabaseAdmin
+    .from('orders')
+    .update({
+      ai_raw_result: processingResult,
+      ai_status: 'processing',
+      ai_error: null,
+      ai_processed_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .eq('ai_status', 'not_started')
+    .in('status', ['uploaded', 'need_review'])
+    .select('id')
+    .maybeSingle()
+
+  if (claimError) {
+    throw new OrderRecognitionError(claimError.message, 400)
+  }
+
+  if (!claimedOrder) {
+    return {
+      skipped: true,
+      reason: 'AI recognition already started, completed, or order is locked',
     }
-  )
+  }
 
   let lastRecognitionResult: OrderRecognitionResult | null = null
 
   try {
-    const recognition = await recognizeOrder(orderId)
+    const recognition = await recognizeOrder(orderId, {
+      ignoreAiStatus: true,
+    })
     lastRecognitionResult = recognition.result
 
     const { data: latestOrder, error: latestOrderError } = await supabaseAdmin
@@ -770,16 +811,30 @@ export async function recognizeAndAutoAddOrder(orderId: string) {
           imagePaths: [],
         }
 
+    const { data: currentOrder } = await supabaseAdmin
+      .from('orders')
+      .select('status')
+      .eq('id', orderId)
+      .single()
+
+    const failureUpdate: Record<string, unknown> = {
+      ai_status: 'failed',
+      ai_error: message,
+      ai_processed_at: new Date().toISOString(),
+      ai_raw_result: failedResult,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (
+      currentOrder &&
+      ['uploaded', 'need_review'].includes(currentOrder.status)
+    ) {
+      failureUpdate.status = 'need_review'
+    }
+
     await supabaseAdmin
       .from('orders')
-      .update({
-        status: 'need_review',
-        ai_status: 'failed',
-        ai_error: message,
-        ai_processed_at: new Date().toISOString(),
-        ai_raw_result: failedResult,
-        updated_at: new Date().toISOString(),
-      })
+      .update(failureUpdate)
       .eq('id', orderId)
 
     throw error
