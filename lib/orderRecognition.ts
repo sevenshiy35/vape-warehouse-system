@@ -155,8 +155,27 @@ function stripEmoji(value: string | null | undefined) {
     .replace(/[\u{1F3FB}-\u{1F3FF}]/gu, '')
 }
 
+function normalizeKnownOcrAliases(value: string) {
+  return value
+    .replace(/\u714c\u8d6b\u95e8/g, '\u714a\u8d6b\u95e8')
+    .replace(/\u5341\u4e8c[\u6743\u6748]/g, '\u5341\u4e8c\u9497')
+}
+
+function stripTobaccoUnitPrefix(value: string) {
+  return value
+    .replace(
+      /^\s*(?:\u5355\u5305|\u4e00\u5305|\u6574\u6761|\u4e00\u6761)\s*/u,
+      ''
+    )
+    .trim()
+}
+
+function normalizeRecognitionText(value: string | null | undefined) {
+  return stripTobaccoUnitPrefix(normalizeKnownOcrAliases(stripEmoji(value)))
+}
+
 function normalizeText(value: string | null | undefined) {
-  return stripEmoji(value)
+  return normalizeKnownOcrAliases(stripEmoji(value))
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\u4e00-\u9fff]+/gu, ' ')
     .replace(/\s+/g, ' ')
@@ -183,11 +202,14 @@ function getInventory(product: ProductRow) {
 }
 
 function scoreProductByDisplayName(item: RecognizedItem, product: ProductRow) {
-  const rawText = normalizeText(item.rawText)
-  const aiDisplayName = normalizeText(item.displayName)
+  const itemRawText = normalizeRecognitionText(item.rawText)
+  const itemDisplayName = normalizeRecognitionText(item.displayName)
 
-  const rawCompact = compactText(item.rawText)
-  const aiCompact = compactText(item.displayName)
+  const rawText = normalizeText(itemRawText)
+  const aiDisplayName = normalizeText(itemDisplayName)
+
+  const rawCompact = compactText(itemRawText)
+  const aiCompact = compactText(itemDisplayName)
 
   const productDisplay = normalizeText(product.display_name)
   const productDisplayCompact = compactText(product.display_name)
@@ -272,7 +294,7 @@ function scoreProductByDisplayName(item: RecognizedItem, product: ProductRow) {
     reasons.push('brand appears in raw text')
   }
 
-  const queryTokens = getTokens(`${item.rawText} ${item.displayName}`)
+  const queryTokens = getTokens(`${itemRawText} ${itemDisplayName}`)
   const productTokens = getTokens(
     `${product.display_name || ''} ${product.product_name_en || ''} ${
       product.product_name_cn || ''
@@ -543,8 +565,9 @@ Rules:
 3. If the same product appears in multiple screenshots, keep it once.
 4. If screenshots contain different product lists, merge all products.
 5. For Yohuu pods, if the image says 1${UNIT_BOX}, return quantity=1 and unit=${UNIT_BOX}; do not convert.
-6. For tobacco displayName containing "\u6574\u6761", return unit=${UNIT_CARTON}; the system converts 1${UNIT_CARTON}=10 packs.
-7. Price x qty examples: 14x5, $14 x 5, \u00a514*5 => quantity=5. Prefer x5, \u00d75, qty5, 5${UNIT_PIECE}, 5${UNIT_BOX}, 5${UNIT_CARTON}. Never use price, total, shipping, phone, or address as quantity.
+6. For tobacco, \u5355\u5305/\u4e00\u5305 only means unit=${UNIT_PIECE}; remove it from displayName. \u6574\u6761/\u4e00\u6761 means unit=${UNIT_CARTON}; remove it from displayName.
+7. Tobacco OCR hints: \u714c\u8d6b\u95e8=\u714a\u8d6b\u95e8, \u5341\u4e8c\u6743/\u5341\u4e8c\u6748=\u5341\u4e8c\u9497.
+8. Price x qty examples: 14x5, $14 x 5, \u00a514*5 => quantity=5. Prefer x5, \u00d75, qty5, 5${UNIT_PIECE}, 5${UNIT_BOX}, 5${UNIT_CARTON}. Never use price, total, shipping, phone, or address as quantity.
       `.trim(),
     },
   ]
