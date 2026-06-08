@@ -95,10 +95,6 @@ export default function HomePage() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {item.description}
               </p>
-
-              <p className="mt-4 text-xs text-gray-400 dark:text-gray-500">
-                {item.href}
-              </p>
             </Link>
           ))}
         </div>
