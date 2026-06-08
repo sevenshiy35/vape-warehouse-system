@@ -1,5 +1,11 @@
 import Link from 'next/link'
+import localFont from 'next/font/local'
 import { PageHeader, PageShell, Panel } from '@/components/PageChrome'
+
+const yinxiangFont = localFont({
+  src: '../public/fonts/ZiTiGuanJiaYinXiang-2.ttf',
+  display: 'swap',
+})
 
 const links = [
   {
@@ -69,7 +75,7 @@ const links = [
 export default function HomePage() {
   return (
     <PageShell maxWidth="max-w-5xl">
-      <div className="home-yinxiang-font">
+      <div className={yinxiangFont.className}>
         <PageHeader
           title="电子烟仓库管理系统"
           description="订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口"
