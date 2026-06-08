@@ -2,8 +2,8 @@ import Link from 'next/link'
 import localFont from 'next/font/local'
 import { PageShell, Panel } from '@/components/PageChrome'
 
-const yinxiangFont = localFont({
-  src: '../public/fonts/ZiTiGuanJiaYinXiang-2.ttf',
+const homepageFont = localFont({
+  src: '../public/fonts/LemiXiaoNaiPaoTi.ttf',
   display: 'swap',
 })
 
@@ -75,26 +75,26 @@ const links = [
 export default function HomePage() {
   return (
     <PageShell maxWidth="max-w-5xl">
-      <div className={yinxiangFont.className} style={yinxiangFont.style}>
+      <div className={homepageFont.className} style={homepageFont.style}>
         <div className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <p
-              className={`${yinxiangFont.className} mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}
-              style={yinxiangFont.style}
+              className={`${homepageFont.className} mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}
+              style={homepageFont.style}
             >
               Warehouse
             </p>
 
             <h1
-              className={`${yinxiangFont.className} text-3xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-4xl`}
-              style={yinxiangFont.style}
+              className={`${homepageFont.className} text-3xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-4xl`}
+              style={homepageFont.style}
             >
               电子烟仓库管理系统
             </h1>
 
             <p
-              className={`${yinxiangFont.className} mt-3 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-400 md:text-lg`}
-              style={yinxiangFont.style}
+              className={`${homepageFont.className} mt-3 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-400 md:text-lg`}
+              style={homepageFont.style}
             >
               订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口
             </p>
@@ -114,15 +114,15 @@ export default function HomePage() {
               "
             >
               <div
-                className={`${yinxiangFont.className} mb-5 inline-flex min-h-12 items-center rounded-md px-5 py-3 text-lg font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
-                style={yinxiangFont.style}
+                className={`${homepageFont.className} mb-5 inline-flex min-h-12 items-center rounded-md px-5 py-3 text-lg font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
+                style={homepageFont.style}
               >
                 {item.title}
               </div>
 
               <p
-                className={`${yinxiangFont.className} text-base font-medium leading-7 text-gray-600 dark:text-gray-400`}
-                style={yinxiangFont.style}
+                className={`${homepageFont.className} text-base font-medium leading-7 text-gray-600 dark:text-gray-400`}
+                style={homepageFont.style}
               >
                 {item.description}
               </p>
@@ -132,15 +132,15 @@ export default function HomePage() {
 
         <Panel className="mt-10">
           <h2
-            className={`${yinxiangFont.className} mb-3 text-xl font-semibold`}
-            style={yinxiangFont.style}
+            className={`${homepageFont.className} mb-3 text-xl font-semibold`}
+            style={homepageFont.style}
           >
             日常使用流程
           </h2>
 
           <ol
-            className={`${yinxiangFont.className} list-decimal space-y-2 pl-5 text-base leading-7 text-gray-700 dark:text-gray-300`}
-            style={yinxiangFont.style}
+            className={`${homepageFont.className} list-decimal space-y-2 pl-5 text-base leading-7 text-gray-700 dark:text-gray-300`}
+            style={homepageFont.style}
           >
             <li>进入“提交新订单”，上传订单截图，填写地址和备注。</li>
             <li>进入“订单列表”，打开刚创建的订单详情。</li>
