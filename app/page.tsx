@@ -86,14 +86,14 @@ export default function HomePage() {
             </p>
 
             <h1
-              className={`${homepageFont.className} text-3xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-4xl`}
+              className={`${homepageFont.className} text-4xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-5xl`}
               style={homepageFont.style}
             >
               电子烟仓库管理系统
             </h1>
 
             <p
-              className={`${homepageFont.className} mt-3 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-400 md:text-lg`}
+              className={`${homepageFont.className} mt-4 max-w-4xl text-lg leading-8 text-gray-600 dark:text-gray-400 md:text-xl`}
               style={homepageFont.style}
             >
               订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口
@@ -114,14 +114,14 @@ export default function HomePage() {
               "
             >
               <div
-                className={`${homepageFont.className} mb-5 inline-flex min-h-12 items-center rounded-md px-5 py-3 text-lg font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
+                className={`${homepageFont.className} mb-5 inline-flex min-h-14 items-center rounded-md px-6 py-3.5 text-xl font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
                 style={homepageFont.style}
               >
                 {item.title}
               </div>
 
               <p
-                className={`${homepageFont.className} text-base font-medium leading-7 text-gray-600 dark:text-gray-400`}
+                className={`${homepageFont.className} text-lg font-medium leading-8 text-gray-600 dark:text-gray-400`}
                 style={homepageFont.style}
               >
                 {item.description}
@@ -132,14 +132,14 @@ export default function HomePage() {
 
         <Panel className="mt-10">
           <h2
-            className={`${homepageFont.className} mb-3 text-xl font-semibold`}
+            className={`${homepageFont.className} mb-4 text-2xl font-semibold`}
             style={homepageFont.style}
           >
             日常使用流程
           </h2>
 
           <ol
-            className={`${homepageFont.className} list-decimal space-y-2 pl-5 text-base leading-7 text-gray-700 dark:text-gray-300`}
+            className={`${homepageFont.className} list-decimal space-y-2.5 pl-5 text-lg leading-8 text-gray-700 dark:text-gray-300`}
             style={homepageFont.style}
           >
             <li>进入“提交新订单”，上传订单截图，填写地址和备注。</li>
