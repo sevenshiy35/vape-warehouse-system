@@ -82,18 +82,18 @@ export default function HomePage() {
               href={item.href}
               className="
                 group
-                rounded-lg border border-gray-200 bg-white p-5 shadow-sm
+                rounded-lg border border-gray-200 bg-white p-6 shadow-sm
                 transition hover:-translate-y-1 hover:shadow-md
                 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/80
               "
             >
               <div
-                className={`mb-4 inline-flex min-h-11 items-center rounded-md px-4 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
+                className={`mb-5 inline-flex min-h-12 items-center rounded-md px-5 py-3 text-base font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
               >
                 {item.title}
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-[15px] font-medium leading-7 text-gray-600 dark:text-gray-400">
                 {item.description}
               </p>
             </Link>
