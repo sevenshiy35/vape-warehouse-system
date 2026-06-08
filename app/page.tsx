@@ -69,11 +69,12 @@ const links = [
 export default function HomePage() {
   return (
     <PageShell maxWidth="max-w-5xl">
-      <PageHeader
-        title="电子烟仓库管理系统"
-        description="订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口"
-        eyebrow="Warehouse"
-      />
+      <div className="home-yinxiang-font">
+        <PageHeader
+          title="电子烟仓库管理系统"
+          description="订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口"
+          eyebrow="Warehouse"
+        />
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {links.map((item) => (
@@ -116,6 +117,7 @@ export default function HomePage() {
             <li>需要复查库存变化时，进入“库存流水”查看入库、预扣、退回、盘点和库位记录。</li>
           </ol>
         </Panel>
+      </div>
     </PageShell>
   )
 }
