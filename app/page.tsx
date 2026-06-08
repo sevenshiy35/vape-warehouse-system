@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import localFont from 'next/font/local'
-import { PageShell, Panel } from '@/components/PageChrome'
+import { PageHeader, PageShell, Panel } from '@/components/PageChrome'
 
 const homepageFont = localFont({
   src: '../public/fonts/LemiXiaoNaiPaoTi.ttf',
@@ -75,31 +75,12 @@ const links = [
 export default function HomePage() {
   return (
     <PageShell maxWidth="max-w-5xl">
-      <div className={homepageFont.className} style={homepageFont.style}>
-        <div className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0">
-            <p
-              className={`${homepageFont.className} mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400`}
-              style={homepageFont.style}
-            >
-              Warehouse
-            </p>
-
-            <h1
-              className={`${homepageFont.className} text-4xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-5xl`}
-              style={homepageFont.style}
-            >
-              电子烟仓库管理系统
-            </h1>
-
-            <p
-              className={`${homepageFont.className} mt-4 max-w-4xl text-lg leading-8 text-gray-600 dark:text-gray-400 md:text-xl`}
-              style={homepageFont.style}
-            >
-              订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口
-            </p>
-          </div>
-        </div>
+      <div>
+        <PageHeader
+          title="电子烟仓库管理系统"
+          description="订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口"
+          eyebrow="Warehouse"
+        />
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {links.map((item) => (
@@ -120,10 +101,7 @@ export default function HomePage() {
                 {item.title}
               </div>
 
-              <p
-                className={`${homepageFont.className} text-lg font-medium leading-8 text-gray-600 dark:text-gray-400`}
-                style={homepageFont.style}
-              >
+              <p className="text-[15px] font-medium leading-7 text-gray-600 dark:text-gray-400">
                 {item.description}
               </p>
             </Link>
@@ -131,17 +109,9 @@ export default function HomePage() {
         </div>
 
         <Panel className="mt-10">
-          <h2
-            className={`${homepageFont.className} mb-4 text-2xl font-semibold`}
-            style={homepageFont.style}
-          >
-            日常使用流程
-          </h2>
+          <h2 className="mb-3 text-lg font-semibold">日常使用流程</h2>
 
-          <ol
-            className={`${homepageFont.className} list-decimal space-y-2.5 pl-5 text-lg leading-8 text-gray-700 dark:text-gray-300`}
-            style={homepageFont.style}
-          >
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-700 dark:text-gray-300">
             <li>进入“提交新订单”，上传订单截图，填写地址和备注。</li>
             <li>进入“订单列表”，打开刚创建的订单详情。</li>
             <li>在订单详情页使用 AI 识别或手动添加商品，核对 SKU、数量、单位、库位和拣货数量。</li>
