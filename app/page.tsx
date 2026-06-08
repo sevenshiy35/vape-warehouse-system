@@ -3,7 +3,7 @@ import localFont from 'next/font/local'
 import { PageHeader, PageShell, Panel } from '@/components/PageChrome'
 
 const homepageFont = localFont({
-  src: '../public/fonts/LemiXiaoNaiPaoTi.ttf',
+  src: '../public/fonts/LemiXiaoXiongRiJiTi.ttf',
   display: 'swap',
 })
 
