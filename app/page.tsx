@@ -7,62 +7,62 @@ const links = [
     description: '上传订单截图，填写地址和备注',
     href: '/submit-order',
     color:
-      'bg-black text-white dark:bg-gray-100 dark:text-gray-900',
+      'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '订单列表',
     description: '查看订单、识别商品、确认订单并进入拣货',
     href: '/admin/orders',
     color:
-      'bg-blue-600 text-white dark:bg-blue-500 dark:text-white',
+      'bg-slate-800 text-white dark:bg-sky-300 dark:text-slate-950',
   },
-{
-  title: '拣货列表',
-  description: '按单号拣货、核对商品并完成订单',
-  href: '/admin/picking',
-  color: 'bg-orange-600 text-white dark:bg-orange-500 dark:text-white',
-},
+  {
+    title: '拣货列表',
+    description: '按单号拣货、核对商品并完成订单',
+    href: '/admin/picking',
+    color: 'bg-amber-700 text-white dark:bg-amber-300 dark:text-amber-950',
+  },
   {
     title: '库存列表',
     description: '查看所有商品库存、库位和低库存状态',
     href: '/admin/inventory',
     color:
-      'bg-green-700 text-white dark:bg-green-500 dark:text-white',
+      'bg-teal-700 text-white dark:bg-teal-300 dark:text-teal-950',
   },
   {
     title: '添加新品',
     description: '创建新的 SKU，并设置初始库存和库位',
     href: '/admin/products/new',
     color:
-      'bg-purple-600 text-white dark:bg-purple-500 dark:text-white',
+      'bg-fuchsia-900 text-white dark:bg-fuchsia-300 dark:text-fuchsia-950',
   },
   {
     title: '入库',
     description: '给已有商品增加库存，写入入库流水',
     href: '/admin/inbound',
     color:
-      'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white',
+      'bg-emerald-700 text-white dark:bg-emerald-300 dark:text-emerald-950',
   },
   {
     title: '库存修正',
     description: '盘点时修正实际库存，自动写入流水',
     href: '/admin/correction',
     color:
-      'bg-yellow-600 text-white dark:bg-yellow-400 dark:text-gray-950',
+      'bg-yellow-700 text-white dark:bg-yellow-300 dark:text-yellow-950',
   },
   {
     title: '库位挪动',
     description: '调整商品库位，不改变库存数量',
     href: '/admin/location-move',
     color:
-      'bg-purple-700 text-white dark:bg-purple-400 dark:text-gray-950',
+      'bg-indigo-800 text-white dark:bg-indigo-300 dark:text-indigo-950',
   },
   {
     title: '库存流水',
     description: '查看出库、入库、盘点修正、库位挪动记录',
     href: '/admin/logs',
     color:
-      'bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-950',
+      'bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-950',
   },
 ]
 
@@ -81,13 +81,14 @@ export default function HomePage() {
               key={item.href}
               href={item.href}
               className="
+                group
                 rounded-lg border border-gray-200 bg-white p-5 shadow-sm
                 transition hover:-translate-y-1 hover:shadow-md
                 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/80
               "
             >
               <div
-                className={`mb-4 inline-flex rounded-lg px-3 py-2 text-sm font-medium ${item.color}`}
+                className={`mb-4 inline-flex min-h-11 items-center rounded-md px-4 py-2.5 text-sm font-semibold shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
               >
                 {item.title}
               </div>
