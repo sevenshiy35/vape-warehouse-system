@@ -10,6 +10,7 @@ import EditOrderItemButton from '@/components/EditOrderItemButton'
 import EditOrderInfoButton from '@/components/EditOrderInfoButton'
 import RecognizeOrderButton from '@/components/RecognizeOrderButton'
 import AddOrderImagesButton from '@/components/AddOrderImagesButton'
+import ConfirmAiOrderItemButton from '@/components/ConfirmAiOrderItemButton'
 import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
 import type { ProductWithInventory } from '@/lib/types'
 import { formatEasternTime } from '@/lib/time'
@@ -101,6 +102,7 @@ type AiResultItem = {
   matchStatus?: string
   matchScore?: number
   matchReason?: string
+  productId?: string | null
   sku?: string | null
   matchedBrand?: string | null
   displayName?: string | null
@@ -146,6 +148,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
     .from('order_items')
     .select(`
       id,
+      product_id,
       sku_snapshot,
       brand_snapshot,
       product_name_cn_snapshot,
@@ -211,6 +214,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
     (sum, item) => sum + Number(item.pick_qty || 0),
     0
   )
+  const existingProductIds = new Set(
+    (items || [])
+      .map((item) => item.product_id)
+      .filter((productId): productId is string => Boolean(productId))
+  )
+  function hasAiProductAlreadyAdded(productId: string | null | undefined) {
+    return Boolean(productId && existingProductIds.has(productId))
+  }
   const orderActions = getOrderActionVisibility(
     order.status,
     order.ai_status
@@ -722,6 +733,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
                         <th className="border-b border-gray-200 p-3 text-left dark:border-gray-700">
                           第二候选
                         </th>
+                        <th className="whitespace-nowrap border-b border-gray-200 p-3 text-left dark:border-gray-700">
+                          操作
+                        </th>
                       </tr>
                     </thead>
 
@@ -801,6 +815,29 @@ export default async function OrderDetailPage({ params }: PageProps) {
                               '-'
                             )}
                           </td>
+
+                          <td className="whitespace-nowrap border-b border-gray-200 p-3 align-top dark:border-gray-800">
+                            <ConfirmAiOrderItemButton
+                              orderId={order.id}
+                              orderStatus={order.status}
+                              productId={item.productId}
+                              productName={
+                                item.displayName ||
+                                item.productNameCN ||
+                                item.productNameEN ||
+                                item.productName ||
+                                item.rawText ||
+                                '-'
+                              }
+                              rawText={item.rawText || ''}
+                              quantity={item.quantity}
+                              unit={item.unit}
+                              matchStatus={item.matchStatus}
+                              alreadyAdded={hasAiProductAlreadyAdded(
+                                item.productId
+                              )}
+                            />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -874,6 +911,29 @@ export default async function OrderDetailPage({ params }: PageProps) {
                             {item.secondChoice.score ?? '-'}
                           </p>
                         )}
+
+                        <div className="pt-2">
+                          <ConfirmAiOrderItemButton
+                            orderId={order.id}
+                            orderStatus={order.status}
+                            productId={item.productId}
+                            productName={
+                              item.displayName ||
+                              item.productNameCN ||
+                              item.productNameEN ||
+                              item.productName ||
+                              item.rawText ||
+                              '-'
+                            }
+                            rawText={item.rawText || ''}
+                            quantity={item.quantity}
+                            unit={item.unit}
+                            matchStatus={item.matchStatus}
+                            alreadyAdded={hasAiProductAlreadyAdded(
+                              item.productId
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1062,6 +1122,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
 type OrderItem = {
   id: string
+  product_id: string | null
   sku_snapshot: string | null
   brand_snapshot: string | null
   product_name_cn_snapshot: string | null
