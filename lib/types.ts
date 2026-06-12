@@ -12,7 +12,6 @@ export type ProductWithInventory = {
   product_name_cn: string
   display_name: string | null
   product_name_en: string | null
-  category?: string | null
   inventory?: InventoryRecord | InventoryRecord[] | null
 }
 

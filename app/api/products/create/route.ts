@@ -62,7 +62,6 @@ export async function POST(request: Request) {
         p_product_name_cn: productNameCN,
         p_display_name: displayName || null,
         p_product_name_en: productNameEN || null,
-        p_category: null,
         p_initial_qty: initialQty,
         p_shelf_location: shelfLocation || null,
         p_low_stock_threshold: lowStockThreshold,
@@ -86,7 +85,6 @@ export async function POST(request: Request) {
         product_name_cn,
         display_name,
         product_name_en,
-        category,
         inventory (
           shelf_location,
           quantity_on_hand,
