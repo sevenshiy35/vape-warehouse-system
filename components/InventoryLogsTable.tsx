@@ -303,7 +303,7 @@ export default function InventoryLogsTable({ logs }: Props) {
                   {desktopColumns.map((column) => (
                     <th
                       key={column.label}
-                      className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                      className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle text-gray-700 dark:border-gray-700 dark:text-gray-200"
                     >
                       {column.label}
                     </th>
