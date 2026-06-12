@@ -327,43 +327,43 @@ export default function InventoryLogsTable({ logs }: Props) {
                       key={log.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
                     >
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {formatEasternTime(log.created_at)}
                       </td>
-                      <td className="border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         <span
                           className={`inline-flex whitespace-nowrap rounded px-2 py-1 ${category.badgeClass}`}
                         >
                           {category.label}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle font-medium dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle font-medium dark:border-gray-800">
                         {getOrderNo(log) || '-'}
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle font-medium dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle font-medium dark:border-gray-800">
                         {log.sku_snapshot || '-'}
                       </td>
                       <td className="break-words border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.product_name_snapshot || '-'}
                       </td>
                       <td
-                        className={`whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800 ${changeClass}`}
+                        className={`whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800 ${changeClass}`}
                       >
                         {formatChange(change)}
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.before_qty}
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.after_qty}
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {getLocationChange(log)}
                       </td>
                       <td className="break-words border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.reason || '-'}
                       </td>
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.operator || '-'}
                       </td>
                     </tr>
