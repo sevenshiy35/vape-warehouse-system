@@ -1,0 +1,429 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { formatEasternTime } from '@/lib/time'
+
+export type InventoryLogRow = {
+  id: string
+  sku_snapshot: string | null
+  product_name_snapshot: string | null
+  change_qty: number | null
+  before_qty: number | null
+  after_qty: number | null
+  log_type: string | null
+  reason: string | null
+  operator: string | null
+  created_at: string | null
+  old_shelf_location: string | null
+  new_shelf_location: string | null
+  orders: { order_no: string | null } | { order_no: string | null }[] | null
+}
+
+type LogCategory = {
+  key: string
+  label: string
+  description: string
+  type: string | null
+  badgeClass: string
+}
+
+const logCategories: LogCategory[] = [
+  {
+    key: 'all',
+    label: '全部',
+    description: '所有库存变化',
+    type: null,
+    badgeClass:
+      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+  },
+  {
+    key: 'order',
+    label: '订单出库',
+    description: '确认订单时预扣库存',
+    type: 'Order',
+    badgeClass:
+      'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  },
+  {
+    key: 'inbound',
+    label: '入库',
+    description: '到货补充库存',
+    type: 'Inbound',
+    badgeClass:
+      'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+  },
+  {
+    key: 'correction',
+    label: '盘点修正',
+    description: '盘点后调整数量',
+    type: 'Correction',
+    badgeClass:
+      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  },
+  {
+    key: 'reversal',
+    label: '订单退回',
+    description: '取消订单后退回预扣',
+    type: 'OrderReversal',
+    badgeClass:
+      'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+  },
+  {
+    key: 'location',
+    label: '库位挪动',
+    description: '只调整货架位置',
+    type: 'LocationMove',
+    badgeClass:
+      'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  },
+]
+
+type Props = {
+  logs: InventoryLogRow[]
+}
+
+function getOrderNo(log: InventoryLogRow) {
+  const orderInfo = Array.isArray(log.orders) ? log.orders[0] : log.orders
+  return orderInfo?.order_no || ''
+}
+
+function getLocationChange(log: InventoryLogRow) {
+  if (!log.old_shelf_location && !log.new_shelf_location) return '-'
+
+  return `${log.old_shelf_location || '-'} → ${log.new_shelf_location || '-'}`
+}
+
+function getCategory(logType: string | null | undefined) {
+  return (
+    logCategories.find((category) => category.type === logType) ||
+    logCategories[0]
+  )
+}
+
+function formatChange(value: number) {
+  if (value > 0) return `+${value}`
+  return String(value)
+}
+
+export default function InventoryLogsTable({ logs }: Props) {
+  const [categoryKey, setCategoryKey] = useState('all')
+  const [search, setSearch] = useState('')
+
+  const selectedCategory =
+    logCategories.find((category) => category.key === categoryKey) ||
+    logCategories[0]
+
+  const categoryStats = useMemo(() => {
+    return logCategories.map((category) => {
+      const categoryLogs =
+        category.key === 'all'
+          ? logs
+          : logs.filter((log) => log.log_type === category.type)
+
+      const netChange = categoryLogs.reduce(
+        (sum, log) => sum + Number(log.change_qty || 0),
+        0
+      )
+
+      return {
+        ...category,
+        count: categoryLogs.length,
+        netChange,
+      }
+    })
+  }, [logs])
+
+  const filteredLogs = useMemo(() => {
+    const keywords = search
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+
+    return logs.filter((log) => {
+      if (
+        selectedCategory.key !== 'all' &&
+        log.log_type !== selectedCategory.type
+      ) {
+        return false
+      }
+
+      if (keywords.length === 0) return true
+
+      const searchableText = [
+        log.sku_snapshot,
+        log.product_name_snapshot,
+        log.reason,
+        log.operator,
+        log.log_type,
+        getOrderNo(log),
+        log.old_shelf_location,
+        log.new_shelf_location,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return keywords.every((keyword) => searchableText.includes(keyword))
+    })
+  }, [logs, search, selectedCategory])
+
+  const filteredNetChange = filteredLogs.reduce(
+    (sum, log) => sum + Number(log.change_qty || 0),
+    0
+  )
+
+  const hasActiveFilters = categoryKey !== 'all' || search.trim()
+
+  return (
+    <div className="space-y-4">
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {categoryStats.map((category) => {
+          const active = category.key === categoryKey
+
+          return (
+            <button
+              key={category.key}
+              type="button"
+              onClick={() => setCategoryKey(category.key)}
+              className={`rounded-lg border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                active
+                  ? 'border-gray-900 bg-gray-950 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-950'
+                  : 'border-gray-200 bg-white text-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">{category.label}</p>
+                  <p
+                    className={`mt-1 text-xs ${
+                      active
+                        ? 'text-gray-300 dark:text-gray-700'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    {category.description}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    active
+                      ? 'bg-white/15 text-white dark:bg-gray-950/10 dark:text-gray-950'
+                      : category.badgeClass
+                  }`}
+                >
+                  {category.count}
+                </span>
+              </div>
+
+              <p
+                className={`mt-3 text-xs ${
+                  active
+                    ? 'text-gray-300 dark:text-gray-700'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                净变化 {formatChange(category.netChange)}
+              </p>
+            </button>
+          )
+        })}
+      </section>
+
+      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+              搜索流水
+            </label>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500"
+              placeholder="SKU / 商品名 / OrderID / 库位 / 原因"
+            />
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm dark:border-gray-800 dark:bg-gray-950">
+            <p className="text-gray-500 dark:text-gray-400">当前记录</p>
+            <p className="mt-1 text-lg font-bold">{filteredLogs.length}</p>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm dark:border-gray-800 dark:bg-gray-950">
+            <p className="text-gray-500 dark:text-gray-400">当前净变化</p>
+            <p className="mt-1 text-lg font-bold">
+              {formatChange(filteredNetChange)}
+            </p>
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryKey('all')
+              setSearch('')
+            }}
+            className="mt-3 rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            清空分类和搜索
+          </button>
+        )}
+      </section>
+
+      {filteredLogs.length === 0 ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+          当前分类下暂无库存流水。
+        </div>
+      ) : (
+        <>
+          <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                  {[
+                    '时间',
+                    '分类',
+                    'OrderID',
+                    'SKU',
+                    '商品名',
+                    '变化',
+                    '库存前',
+                    '库存后',
+                    '库位变化',
+                    '原因',
+                    '操作人',
+                  ].map((header) => (
+                    <th
+                      key={header}
+                      className="border-b border-gray-200 p-3 text-left text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredLogs.map((log) => {
+                  const change = Number(log.change_qty || 0)
+                  const category = getCategory(log.log_type)
+                  const changeClass =
+                    change < 0
+                      ? 'text-red-600 font-medium dark:text-red-400'
+                      : change > 0
+                      ? 'text-green-700 font-medium dark:text-green-400'
+                      : 'text-gray-700 dark:text-gray-300'
+
+                  return (
+                    <tr
+                      key={log.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
+                    >
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                        {formatEasternTime(log.created_at)}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        <span className={`rounded px-2 py-1 ${category.badgeClass}`}>
+                          {category.label}
+                        </span>
+                      </td>
+                      <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                        {getOrderNo(log) || '-'}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                        {log.sku_snapshot || '-'}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {log.product_name_snapshot || '-'}
+                      </td>
+                      <td
+                        className={`border-b border-gray-200 p-3 dark:border-gray-800 ${changeClass}`}
+                      >
+                        {formatChange(change)}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {log.before_qty}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {log.after_qty}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {getLocationChange(log)}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {log.reason || '-'}
+                      </td>
+                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                        {log.operator || '-'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="space-y-3 md:hidden">
+            {filteredLogs.map((log) => {
+              const change = Number(log.change_qty || 0)
+              const category = getCategory(log.log_type)
+              const changeClass =
+                change < 0
+                  ? 'text-red-600 dark:text-red-400'
+                  : change > 0
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-gray-700 dark:text-gray-300'
+
+              return (
+                <div
+                  key={log.id}
+                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold">
+                        {log.sku_snapshot || '-'}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {log.product_name_snapshot || '-'}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded px-2 py-1 text-xs ${category.badgeClass}`}
+                    >
+                      {category.label}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
+                      <p className="text-gray-500 dark:text-gray-400">变化</p>
+                      <p className={`mt-1 text-lg font-bold ${changeClass}`}>
+                        {formatChange(change)}
+                      </p>
+                    </div>
+                    <div className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-950">
+                      <p className="text-gray-500 dark:text-gray-400">库存</p>
+                      <p className="mt-1 font-semibold">
+                        {log.before_qty ?? '-'} → {log.after_qty ?? '-'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                    <p>时间：{formatEasternTime(log.created_at)}</p>
+                    <p>OrderID：{getOrderNo(log) || '-'}</p>
+                    <p>库位：{getLocationChange(log)}</p>
+                    <p>原因：{log.reason || '-'}</p>
+                    <p>操作人：{log.operator || '-'}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
