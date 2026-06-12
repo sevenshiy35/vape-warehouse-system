@@ -78,6 +78,20 @@ const logCategories: LogCategory[] = [
   },
 ]
 
+const desktopColumns = [
+  { label: '时间', className: 'w-[170px]' },
+  { label: '分类', className: 'w-[110px]' },
+  { label: 'OrderID', className: 'w-[120px]' },
+  { label: 'SKU', className: 'w-[110px]' },
+  { label: '商品名', className: 'w-[220px]' },
+  { label: '变化', className: 'w-[80px]' },
+  { label: '库存前', className: 'w-[90px]' },
+  { label: '库存后', className: 'w-[90px]' },
+  { label: '库位变化', className: 'w-[150px]' },
+  { label: '原因', className: 'w-[260px]' },
+  { label: '操作人', className: 'w-[100px]' },
+]
+
 type Props = {
   logs: InventoryLogRow[]
 }
@@ -278,27 +292,20 @@ export default function InventoryLogsTable({ logs }: Props) {
       ) : (
         <>
           <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
-            <table className="w-full text-sm">
+            <table className="min-w-[1500px] table-fixed text-sm">
+              <colgroup>
+                {desktopColumns.map((column) => (
+                  <col key={column.label} className={column.className} />
+                ))}
+              </colgroup>
               <thead className="bg-gray-100 dark:bg-gray-800">
                 <tr>
-                  {[
-                    '时间',
-                    '分类',
-                    'OrderID',
-                    'SKU',
-                    '商品名',
-                    '变化',
-                    '库存前',
-                    '库存后',
-                    '库位变化',
-                    '原因',
-                    '操作人',
-                  ].map((header) => (
+                  {desktopColumns.map((column) => (
                     <th
-                      key={header}
-                      className="border-b border-gray-200 p-3 text-left text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                      key={column.label}
+                      className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle text-gray-700 dark:border-gray-700 dark:text-gray-200"
                     >
-                      {header}
+                      {column.label}
                     </th>
                   ))}
                 </tr>
@@ -320,41 +327,43 @@ export default function InventoryLogsTable({ logs }: Props) {
                       key={log.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/70"
                     >
-                      <td className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
                         {formatEasternTime(log.created_at)}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
-                        <span className={`rounded px-2 py-1 ${category.badgeClass}`}>
+                      <td className="border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
+                        <span
+                          className={`inline-flex whitespace-nowrap rounded px-2 py-1 ${category.badgeClass}`}
+                        >
                           {category.label}
                         </span>
                       </td>
-                      <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle font-medium dark:border-gray-800">
                         {getOrderNo(log) || '-'}
                       </td>
-                      <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle font-medium dark:border-gray-800">
                         {log.sku_snapshot || '-'}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="break-words border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.product_name_snapshot || '-'}
                       </td>
                       <td
-                        className={`border-b border-gray-200 p-3 dark:border-gray-800 ${changeClass}`}
+                        className={`whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800 ${changeClass}`}
                       >
                         {formatChange(change)}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
                         {log.before_qty}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
                         {log.after_qty}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
                         {getLocationChange(log)}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="break-words border-b border-gray-200 p-3 text-left align-middle dark:border-gray-800">
                         {log.reason || '-'}
                       </td>
-                      <td className="border-b border-gray-200 p-3 dark:border-gray-800">
+                      <td className="whitespace-nowrap border-b border-gray-200 p-3 text-center align-middle dark:border-gray-800">
                         {log.operator || '-'}
                       </td>
                     </tr>
