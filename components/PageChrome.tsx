@@ -16,7 +16,7 @@ type PageHeaderProps = {
 type NavButtonProps = {
   href: string
   children: ReactNode
-  variant?: 'default' | 'primary' | 'dark'
+  variant?: 'default' | 'primary' | 'dark' | 'success' | 'danger' | 'quiet'
 }
 
 type PanelProps = {
@@ -28,6 +28,7 @@ type StatCardProps = {
   label: string
   value: ReactNode
   description?: string
+  tone?: 'default' | 'primary' | 'success' | 'warning' | 'danger'
 }
 
 export function PageShell({
@@ -35,7 +36,7 @@ export function PageShell({
   maxWidth = 'max-w-6xl',
 }: PageShellProps) {
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-5 text-gray-900 dark:bg-gray-950 dark:text-gray-100 md:px-8 md:py-8">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-5 text-[var(--foreground)] dark:text-zinc-100 md:px-8 md:py-8">
       <div className={`mx-auto w-full ${maxWidth}`}>{children}</div>
     </main>
   )
@@ -48,20 +49,20 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
+    <div className="mb-7 flex flex-col gap-4 border-b border-[var(--border-soft)] pb-5 md:flex-row md:items-start md:justify-between">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
             {eyebrow}
           </p>
         )}
 
-        <h1 className="text-2xl font-bold tracking-normal text-gray-950 dark:text-gray-50 md:text-3xl">
+        <h1 className="text-3xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-zinc-50 md:text-4xl">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-base">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)] md:text-base">
             {description}
           </p>
         )}
@@ -82,15 +83,21 @@ export function NavButton({
   variant = 'default',
 }: NavButtonProps) {
   const base =
-    'inline-flex min-h-10 items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium shadow-sm transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-950'
+    'inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--background)]'
 
   const variants = {
     default:
-      'border-gray-300 bg-white text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800',
+      'border-zinc-300 bg-white text-zinc-900 shadow-sm shadow-zinc-200/60 hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-none dark:hover:bg-zinc-800',
     primary:
-      'border-blue-600 bg-blue-600 text-white hover:bg-blue-700 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400',
+      'border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm shadow-blue-500/20 hover:bg-[var(--primary-hover)]',
     dark:
-      'border-gray-900 bg-gray-950 text-white hover:bg-gray-800 dark:border-gray-100 dark:bg-gray-100 dark:text-gray-950 dark:hover:bg-gray-200',
+      'border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-300/40 hover:bg-zinc-800 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200',
+    success:
+      'border-[var(--success)] bg-[var(--success)] text-white shadow-sm shadow-green-500/20 hover:brightness-95',
+    danger:
+      'border-[var(--danger)] bg-[var(--danger)] text-white shadow-sm shadow-red-500/20 hover:brightness-95',
+    quiet:
+      'border-transparent bg-transparent text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-zinc-900',
   }
 
   return (
@@ -103,22 +110,44 @@ export function NavButton({
 export function Panel({ children, className = '' }: PanelProps) {
   return (
     <section
-      className={`rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5 ${className}`}
+      className={`rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] p-4 shadow-sm shadow-zinc-200/70 dark:bg-[var(--surface)] dark:shadow-none md:p-5 ${className}`}
     >
       {children}
     </section>
   )
 }
 
-export function StatCard({ label, value, description }: StatCardProps) {
+export function StatCard({
+  label,
+  value,
+  description,
+  tone = 'default',
+}: StatCardProps) {
+  const tones = {
+    default:
+      'border-zinc-200 bg-white dark:border-zinc-800 dark:bg-[var(--surface)]',
+    primary:
+      'border-blue-200 bg-blue-50/80 dark:border-blue-900 dark:bg-blue-950/30',
+    success:
+      'border-green-200 bg-green-50/80 dark:border-green-900 dark:bg-green-950/30',
+    warning:
+      'border-orange-200 bg-orange-50/80 dark:border-orange-900 dark:bg-orange-950/30',
+    danger:
+      'border-red-200 bg-red-50/80 dark:border-red-900 dark:bg-red-950/30',
+  }
+
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-950 dark:text-gray-50">
+    <div
+      className={`rounded-2xl border p-4 shadow-sm shadow-zinc-200/70 dark:shadow-none ${tones[tone]}`}
+    >
+      <p className="text-sm font-medium text-[var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-1 text-3xl font-bold tracking-[-0.03em] text-zinc-950 dark:text-zinc-50">
         {value}
       </p>
       {description && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
           {description}
         </p>
       )}

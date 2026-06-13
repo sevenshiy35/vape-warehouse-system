@@ -1,129 +1,450 @@
 import Link from 'next/link'
-import localFont from 'next/font/local'
-import { PageHeader, PageShell, Panel } from '@/components/PageChrome'
+import { NavButton, PageShell, Panel, StatCard } from '@/components/PageChrome'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { formatEasternTime } from '@/lib/time'
+import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
 
-const homepageFont = localFont({
-  src: '../public/fonts/LemiXiaoXiongRiJiTi.ttf',
-  display: 'swap',
-})
+export const dynamic = 'force-dynamic'
 
-const links = [
+type WorkOrder = {
+  id: string
+  order_no: string
+  address: string | null
+  status: string
+  total_items: number | null
+  created_at: string | null
+}
+
+type RecentLog = {
+  id: string
+  sku_snapshot: string | null
+  product_name_snapshot: string | null
+  change_qty: number | null
+  log_type: string | null
+  created_at: string | null
+}
+
+const quickActions = [
   {
-    title: '提交新订单',
-    description: '上传订单截图，填写地址和备注',
-    href: '/submit-order',
-    color:
-      'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
-  },
-  {
-    title: '订单列表',
-    description: '查看订单、识别商品、确认订单并进入拣货',
-    href: '/admin/orders',
-    color:
-      'bg-slate-800 text-white dark:bg-sky-300 dark:text-slate-950',
-  },
-  {
-    title: '拣货列表',
-    description: '按单号拣货、核对商品并完成订单',
-    href: '/admin/picking',
-    color: 'bg-amber-700 text-white dark:bg-amber-300 dark:text-amber-950',
-  },
-  {
-    title: '库存列表',
-    description: '查看所有商品库存、库位和低库存状态',
-    href: '/admin/inventory',
-    color:
-      'bg-teal-700 text-white dark:bg-teal-300 dark:text-teal-950',
+    title: '入库',
+    description: '已有 SKU 到货补库存',
+    href: '/admin/inbound',
+    tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '添加新品',
-    description: '创建新的 SKU，并设置初始库存和库位',
+    description: '创建新 SKU 和初始库位',
     href: '/admin/products/new',
-    color:
-      'bg-fuchsia-900 text-white dark:bg-fuchsia-300 dark:text-fuchsia-950',
-  },
-  {
-    title: '入库',
-    description: '给已有商品增加库存，写入入库流水',
-    href: '/admin/inbound',
-    color:
-      'bg-emerald-700 text-white dark:bg-emerald-300 dark:text-emerald-950',
+    tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '库存修正',
-    description: '盘点时修正实际库存，自动写入流水',
+    description: '盘点后修正实际数量',
     href: '/admin/correction',
-    color:
-      'bg-yellow-700 text-white dark:bg-yellow-300 dark:text-yellow-950',
+    tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '库位挪动',
-    description: '调整商品库位，不改变库存数量',
+    description: '只调整货架位置',
     href: '/admin/location-move',
-    color:
-      'bg-indigo-800 text-white dark:bg-indigo-300 dark:text-indigo-950',
-  },
-  {
-    title: '库存流水',
-    description: '查看出库、入库、盘点修正、库位挪动记录',
-    href: '/admin/logs',
-    color:
-      'bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-950',
+    tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
 ]
 
-export default function HomePage() {
-  return (
-    <PageShell maxWidth="max-w-5xl">
-      <div>
-        <PageHeader
-          title="电子烟仓库管理系统"
-          description="订单上传、商品识别、库存预扣、拣货完成、入库、盘点修正和库存流水入口"
-          eyebrow="Warehouse"
-        />
+const orderStatusMeta: Record<
+  string,
+  {
+    label: string
+    className: string
+  }
+> = {
+  uploaded: {
+    label: '已上传',
+    className: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950/40 dark:text-blue-200 dark:ring-blue-900',
+  },
+  need_review: {
+    label: '待确认',
+    className:
+      'bg-orange-50 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:ring-orange-900',
+  },
+  picking: {
+    label: '拣货中',
+    className:
+      'bg-green-50 text-green-700 ring-1 ring-green-200 dark:bg-green-950/40 dark:text-green-200 dark:ring-green-900',
+  },
+  picking_editing: {
+    label: '修改中',
+    className:
+      'bg-purple-50 text-purple-700 ring-1 ring-purple-200 dark:bg-purple-950/40 dark:text-purple-200 dark:ring-purple-900',
+  },
+}
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {links.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="
-                group
-                rounded-lg border border-gray-200 bg-white p-6 shadow-sm
-                transition hover:-translate-y-1 hover:shadow-md
-                dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800/80
-              "
-            >
-              <div
-                className={`${homepageFont.className} mb-5 inline-flex min-h-14 items-center rounded-md px-6 py-3.5 text-xl font-semibold leading-none shadow-sm ring-1 ring-black/5 transition group-hover:shadow-md dark:ring-white/10 ${item.color}`}
-                style={homepageFont.style}
-              >
-                {item.title}
+const logTypeLabel: Record<string, string> = {
+  Order: '订单出库',
+  Inbound: '入库',
+  Correction: '盘点修正',
+  OrderReversal: '订单退回',
+  LocationMove: '库位挪动',
+}
+
+function getOrderStatus(status: string) {
+  return (
+    orderStatusMeta[status] || {
+      label: status,
+      className:
+        'bg-zinc-100 text-zinc-800 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:ring-zinc-700',
+    }
+  )
+}
+
+function getLogChange(value: number | null) {
+  const change = Number(value || 0)
+  return change > 0 ? `+${change}` : String(change)
+}
+
+function getInventoryStats(products: ProductWithInventory[]) {
+  return products.reduce(
+    (stats, product) => {
+      const inventory = getInventoryRecord(product)
+      const quantity = Number(inventory?.quantity_on_hand || 0)
+      const threshold = Number(inventory?.low_stock_threshold || 3)
+      const shelfLocation = String(inventory?.shelf_location || '').trim()
+
+      if (quantity === 0) {
+        stats.outOfStock += 1
+      }
+
+      if (quantity > 0 && quantity <= threshold) {
+        stats.lowStock += 1
+      }
+
+      if (quantity > 0 && !shelfLocation) {
+        stats.missingLocation += 1
+      }
+
+      return stats
+    },
+    {
+      lowStock: 0,
+      outOfStock: 0,
+      missingLocation: 0,
+    }
+  )
+}
+
+export default async function HomePage() {
+  const [
+    needReviewResult,
+    pickingResult,
+    productsResult,
+    workOrdersResult,
+    recentLogsResult,
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'need_review'),
+    supabaseAdmin
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['picking', 'picking_editing']),
+    supabaseAdmin.from('products').select(`
+      id,
+      sku,
+      brand,
+      product_name_cn,
+      display_name,
+      product_name_en,
+      inventory (
+        shelf_location,
+        quantity_on_hand,
+        low_stock_threshold,
+        updated_at
+      )
+    `),
+    supabaseAdmin
+      .from('orders')
+      .select('id, order_no, address, status, total_items, created_at')
+      .in('status', ['uploaded', 'need_review', 'picking', 'picking_editing'])
+      .order('created_at', { ascending: false })
+      .limit(6),
+    supabaseAdmin
+      .from('inventory_logs')
+      .select('id, sku_snapshot, product_name_snapshot, change_qty, log_type, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ])
+
+  const products = (productsResult.data || []) as ProductWithInventory[]
+  const inventoryStats = getInventoryStats(products)
+  const workOrders = (workOrdersResult.data || []) as WorkOrder[]
+  const recentLogs = (recentLogsResult.data || []) as RecentLog[]
+
+  return (
+    <PageShell maxWidth="max-w-7xl">
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-[28px] border border-[var(--border-soft)] bg-white shadow-sm shadow-zinc-200/80 dark:bg-[var(--surface)] dark:shadow-none">
+          <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-6 md:p-9">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+                Warehouse Daily Board
+              </p>
+
+              <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-[-0.04em] text-zinc-950 dark:text-zinc-50 md:text-6xl">
+                电子烟仓库作业台
+              </h1>
+
+              <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)] md:text-lg">
+                先处理待确认订单，再按库位拣货；库存异常和最近流水放在同一屏，减少来回跳转。
+              </p>
+
+              <div className="mt-7 flex flex-wrap gap-2.5">
+                <NavButton href="/submit-order" variant="primary">
+                  提交新订单
+                </NavButton>
+                <NavButton href="/admin/orders">
+                  查看订单
+                </NavButton>
+                <NavButton href="/admin/picking" variant="success">
+                  进入拣货
+                </NavButton>
+                <NavButton href="/admin/inventory">库存列表</NavButton>
+                <NavButton href="/admin/logs" variant="quiet">
+                  库存流水
+                </NavButton>
+              </div>
+            </div>
+
+            <div className="border-t border-[var(--border-soft)] bg-[var(--surface-soft)] p-5 dark:bg-zinc-950/30 lg:border-l lg:border-t-0 md:p-7">
+              <div className="inline-flex rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 shadow-sm shadow-zinc-200/70 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-none">
+                今日先看这里
               </div>
 
-              <p className="text-[15px] font-medium leading-7 text-gray-600 dark:text-gray-400">
-                {item.description}
-              </p>
-            </Link>
-          ))}
+              <Link
+                href="/submit-order"
+                className="mt-5 block rounded-3xl border border-blue-200 bg-white p-5 shadow-sm shadow-blue-100/70 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-blue-900 dark:bg-zinc-900 dark:shadow-none dark:hover:border-blue-700"
+              >
+                <p className="text-sm font-semibold text-[var(--primary)]">
+                  新订单入口
+                </p>
+                <p className="mt-1 text-3xl font-bold tracking-[-0.04em] text-zinc-950 dark:text-zinc-50">
+                  提交新订单
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  上传订单截图，填写地址和备注，开始 AI 识别流程。
+                </p>
+                <span className="mt-4 inline-flex min-h-10 items-center rounded-full bg-[var(--primary)] px-4 text-sm font-semibold text-white">
+                  开始上传
+                </span>
+              </Link>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-orange-200 bg-orange-50/80 p-4 dark:border-orange-900 dark:bg-orange-950/30">
+                  <p className="text-sm font-medium text-orange-700 dark:text-orange-200">
+                    待确认
+                  </p>
+                  <p className="mt-1 text-4xl font-bold tracking-[-0.04em] text-zinc-950 dark:text-zinc-50">
+                    {needReviewResult.count || 0}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-green-200 bg-green-50/80 p-4 dark:border-green-900 dark:bg-green-950/30">
+                  <p className="text-sm font-medium text-green-700 dark:text-green-200">
+                    拣货中
+                  </p>
+                  <p className="mt-1 text-4xl font-bold tracking-[-0.04em] text-zinc-950 dark:text-zinc-50">
+                    {pickingResult.count || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="待确认订单"
+            value={needReviewResult.count || 0}
+            description="需要核对 AI 识别结果"
+            tone="warning"
+          />
+          <StatCard
+            label="拣货中订单"
+            value={pickingResult.count || 0}
+            description="正在仓库处理的订单"
+            tone="success"
+          />
+          <StatCard
+            label="低库存 SKU"
+            value={inventoryStats.lowStock}
+            description="库存大于 0 且低于阈值"
+            tone="primary"
+          />
+          <StatCard
+            label="无库存 / 缺库位"
+            value={inventoryStats.outOfStock + inventoryStats.missingLocation}
+            description={`无库存 ${inventoryStats.outOfStock}，缺库位 ${inventoryStats.missingLocation}`}
+            tone="danger"
+          />
+        </section>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <Panel>
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Current Work
+                </p>
+                <h2 className="mt-1 text-xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-zinc-50">
+                  当前作业队列
+                </h2>
+              </div>
+
+              <NavButton href="/admin/orders" variant="quiet">
+                查看全部订单
+              </NavButton>
+            </div>
+
+            {workOrders.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-zinc-300 bg-[var(--surface-soft)] p-6 text-sm text-[var(--muted)] dark:border-zinc-700">
+                暂时没有待处理订单，作业台很清爽。
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {workOrders.map((order) => {
+                  const status = getOrderStatus(order.status)
+
+                  return (
+                    <Link
+                      key={order.id}
+                      href={`/admin/orders/${order.id}`}
+                      className="block rounded-2xl border border-zinc-200 bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-blue-800 dark:hover:bg-zinc-900"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-lg font-bold tracking-[-0.02em] text-[var(--primary)]">
+                            {order.order_no}
+                          </p>
+                          <p className="mt-1 truncate text-sm text-zinc-600 dark:text-zinc-300">
+                            {order.address || '地址未填写'}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--muted)]">
+                        <span>商品数：{order.total_items ?? '-'}</span>
+                        <span>{formatEasternTime(order.created_at)}</span>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </Panel>
+
+          <div className="space-y-6">
+            <Panel>
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Quick Actions
+                </p>
+                <h2 className="mt-1 text-xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-zinc-50">
+                  快速操作
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                {quickActions.map((action) => (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="group flex items-center gap-3 rounded-2xl border border-zinc-200 bg-[var(--surface-soft)] p-3 transition hover:-translate-y-0.5 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:bg-zinc-900"
+                  >
+                    <span
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-sm ${action.tone}`}
+                    >
+                      {action.title.slice(0, 1)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-bold text-zinc-950 dark:text-zinc-50">
+                        {action.title}
+                      </span>
+                      <span className="mt-0.5 block text-sm text-[var(--muted)]">
+                        {action.description}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel>
+              <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                    Recent Logs
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-zinc-50">
+                    最近库存流水
+                  </h2>
+                </div>
+                <Link
+                  href="/admin/logs"
+                  className="text-sm font-semibold text-[var(--primary)] hover:underline"
+                >
+                  全部
+                </Link>
+              </div>
+
+              {recentLogs.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-zinc-300 bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)] dark:border-zinc-700">
+                  暂无库存流水。
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {recentLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="rounded-2xl border border-zinc-200 bg-[var(--surface-soft)] p-3 dark:border-zinc-800 dark:bg-zinc-950/40"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-zinc-950 dark:text-zinc-50">
+                            {log.sku_snapshot || '-'}
+                          </p>
+                          <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                            {log.product_name_snapshot || '-'}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`shrink-0 text-sm font-black ${
+                            Number(log.change_qty || 0) < 0
+                              ? 'text-red-600 dark:text-red-300'
+                              : 'text-green-600 dark:text-green-300'
+                          }`}
+                        >
+                          {getLogChange(log.change_qty)}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
+                        <span>{logTypeLabel[String(log.log_type || '')] || log.log_type || '-'}</span>
+                        <span>{formatEasternTime(log.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          </div>
         </div>
-
-        <Panel className="mt-10">
-          <h2 className="mb-3 text-lg font-semibold">日常使用流程</h2>
-
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-gray-700 dark:text-gray-300">
-            <li>进入“提交新订单”，上传订单截图，填写地址和备注；系统会在后台自动识别商品。</li>
-            <li>进入“订单列表”，打开新订单详情，查看 AI 识别状态、识别分数和匹配结果。</li>
-            <li>在订单详情页核对商品明细；识别正确的商品可直接保留，需确认项点击“确认加入”，漏识别或误识别的商品手动添加或调整。</li>
-            <li>核对 SKU、数量、单位、库位和总数量无误后，点击“确认订单”；系统会预扣库存，并把订单转入“拣货中”。</li>
-            <li>进入“拣货列表”，按单号、库位和本单总数量拣货、打包。</li>
-            <li>拣货中如需改商品，回到订单详情修改；订单会进入“拣货修改中”，确认后点击“保存修改”。</li>
-            <li>商品和数量全部核对完成后，点击“完成拣货”，订单状态变为“已完成”。</li>
-            <li>需要取消订单时，未确认订单不会影响库存；已预扣库存的订单取消后，系统会自动退回已预扣数量。</li>
-            <li>已有商品到货进入“入库”；没有 SKU 的新品进入“添加新品”；盘点数量不符进入“库存修正”；只调整货架位置进入“库位挪动”。</li>
-            <li>需要复查库存变化时，进入“库存流水”，按订单出库、入库、订单退回、盘点修正和库位挪动分类查看。</li>
-          </ol>
-        </Panel>
       </div>
     </PageShell>
   )
