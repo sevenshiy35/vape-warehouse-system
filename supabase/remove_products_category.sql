@@ -27,6 +27,19 @@ drop function if exists public.create_product_with_inventory(
   integer,
   text,
   integer,
+  text
+);
+
+drop function if exists public.create_product_with_inventory(
+  text,
+  text,
+  text,
+  text,
+  text,
+  text,
+  integer,
+  text,
+  integer,
   integer,
   integer,
   text
