@@ -20,11 +20,17 @@ type Filters = {
   dateTo: string
   sort: string
   dir: string
+  page: number
 }
 
 type Props = {
   orders: Order[]
   filters: Filters
+  pagination: {
+    page: number
+    pageSize: number
+    totalItems: number
+  }
 }
 
 const statusOptions = [
@@ -47,6 +53,7 @@ function buildOrdersHref(next: Partial<Filters>) {
     dateTo: '',
     sort: 'created_at',
     dir: 'desc',
+    page: 1,
     ...next,
   }
 
@@ -61,6 +68,9 @@ function buildOrdersHref(next: Partial<Filters>) {
   }
   if (merged.dir && merged.dir !== 'desc') {
     params.set('dir', merged.dir)
+  }
+  if (merged.page > 1) {
+    params.set('page', String(merged.page))
   }
 
   const query = params.toString()
@@ -133,6 +143,7 @@ function SortHeader({
         ...filters,
         sort: sortKey,
         dir: nextDir,
+        page: 1,
       })}
       className="inline-flex items-center gap-1 font-medium text-gray-700 hover:text-blue-600 dark:text-gray-200 dark:hover:text-blue-400"
     >
@@ -144,7 +155,76 @@ function SortHeader({
   )
 }
 
-export default function OrdersTable({ orders, filters }: Props) {
+function PaginationControls({
+  filters,
+  pagination,
+}: {
+  filters: Filters
+  pagination: Props['pagination']
+}) {
+  const totalPages = Math.max(
+    1,
+    Math.ceil(pagination.totalItems / pagination.pageSize)
+  )
+  const currentPage = Math.min(pagination.page, totalPages)
+  const start =
+    pagination.totalItems === 0
+      ? 0
+      : (currentPage - 1) * pagination.pageSize + 1
+  const end = Math.min(
+    currentPage * pagination.pageSize,
+    pagination.totalItems
+  )
+  const previousPage = Math.max(1, currentPage - 1)
+  const nextPage = Math.min(totalPages, currentPage + 1)
+  const canGoPrevious = currentPage > 1
+  const canGoNext = currentPage < totalPages
+  const buttonClass =
+    'inline-flex min-h-10 items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium transition'
+  const disabledClass =
+    'border-gray-200 bg-gray-100 text-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-600'
+  const activeClass =
+    'border-gray-300 bg-white text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-800'
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-gray-600 dark:text-gray-400">
+        每页 {pagination.pageSize} 条，当前显示 {start}-{end} / 共{' '}
+        {pagination.totalItems} 条
+      </p>
+
+      <div className="flex items-center gap-2">
+        {canGoPrevious ? (
+          <Link
+            href={buildOrdersHref({ ...filters, page: previousPage })}
+            className={`${buttonClass} ${activeClass}`}
+          >
+            上一页
+          </Link>
+        ) : (
+          <span className={`${buttonClass} ${disabledClass}`}>上一页</span>
+        )}
+
+        <span className="px-2 text-gray-600 dark:text-gray-400">
+          第 {currentPage} / {totalPages} 页
+        </span>
+
+        {canGoNext ? (
+          <Link
+            href={buildOrdersHref({ ...filters, page: nextPage })}
+            className={`${buttonClass} ${activeClass}`}
+          >
+            下一页
+          </Link>
+        ) : (
+          <span className={`${buttonClass} ${disabledClass}`}>下一页</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default function OrdersTable({ orders, filters, pagination }: Props) {
   const inputClass =
     'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 md:text-sm'
 
@@ -154,6 +234,7 @@ export default function OrdersTable({ orders, filters }: Props) {
         <form method="get" action="/admin/orders" className="space-y-4">
           <input type="hidden" name="sort" value={filters.sort} />
           <input type="hidden" name="dir" value={filters.dir} />
+          <input type="hidden" name="page" value="1" />
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
@@ -223,6 +304,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                     href={buildOrdersHref({
                       ...filters,
                       status: item.value,
+                      page: 1,
                     })}
                     className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                       active
@@ -255,9 +337,11 @@ export default function OrdersTable({ orders, filters }: Props) {
         </form>
 
         <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-          当前结果：{orders.length} 个订单
+          当前页：{orders.length} 个订单
         </div>
       </section>
+
+      <PaginationControls filters={filters} pagination={pagination} />
 
       {/* 手机端卡片 */}
       <div className="space-y-3 md:hidden">
@@ -435,6 +519,8 @@ export default function OrdersTable({ orders, filters }: Props) {
           </tbody>
         </table>
       </div>
+
+      <PaginationControls filters={filters} pagination={pagination} />
     </div>
   )
 }

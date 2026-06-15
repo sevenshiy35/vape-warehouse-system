@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { formatEasternTime } from '@/lib/time'
 
 export type InventoryLogRow = {
@@ -92,6 +92,8 @@ const desktopColumns = [
   { label: '操作人', className: 'w-[100px]' },
 ]
 
+const PAGE_SIZE = 50
+
 type Props = {
   logs: InventoryLogRow[]
 }
@@ -122,6 +124,7 @@ function formatChange(value: number) {
 export default function InventoryLogsTable({ logs }: Props) {
   const [categoryKey, setCategoryKey] = useState('all')
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
 
   const selectedCategory =
     logCategories.find((category) => category.key === categoryKey) ||
@@ -188,6 +191,59 @@ export default function InventoryLogsTable({ logs }: Props) {
   )
 
   const hasActiveFilters = categoryKey !== 'all' || search.trim()
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE))
+  const normalizedPage = Math.min(page, totalPages)
+  const pageStartIndex = (normalizedPage - 1) * PAGE_SIZE
+  const pageLogs = filteredLogs.slice(pageStartIndex, pageStartIndex + PAGE_SIZE)
+  const visibleStart = filteredLogs.length === 0 ? 0 : pageStartIndex + 1
+  const visibleEnd = Math.min(pageStartIndex + PAGE_SIZE, filteredLogs.length)
+  const canGoPrevious = normalizedPage > 1
+  const canGoNext = normalizedPage < totalPages
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages)
+    }
+  }, [page, totalPages])
+
+  function resetPage() {
+    setPage(1)
+  }
+
+  function renderPaginationControls() {
+    return (
+      <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-gray-600 dark:text-gray-400">
+          每页 {PAGE_SIZE} 条，当前显示 {visibleStart}-{visibleEnd} / 共{' '}
+          {filteredLogs.length} 条
+        </p>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={!canGoPrevious}
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-800 dark:disabled:border-gray-800 dark:disabled:bg-gray-900 dark:disabled:text-gray-600"
+          >
+            上一页
+          </button>
+
+          <span className="px-2 text-gray-600 dark:text-gray-400">
+            第 {normalizedPage} / {totalPages} 页
+          </span>
+
+          <button
+            type="button"
+            disabled={!canGoNext}
+            onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 transition hover:bg-gray-50 disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-800 dark:disabled:border-gray-800 dark:disabled:bg-gray-900 dark:disabled:text-gray-600"
+          >
+            下一页
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -199,7 +255,10 @@ export default function InventoryLogsTable({ logs }: Props) {
             <button
               key={category.key}
               type="button"
-              onClick={() => setCategoryKey(category.key)}
+              onClick={() => {
+                setCategoryKey(category.key)
+                resetPage()
+              }}
               className={`rounded-lg border p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                 active
                   ? 'border-gray-900 bg-gray-950 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-950'
@@ -252,7 +311,10 @@ export default function InventoryLogsTable({ logs }: Props) {
             </label>
             <input
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                resetPage()
+              }}
               className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500"
               placeholder="SKU / 商品名 / OrderID / 库位 / 原因"
             />
@@ -277,6 +339,7 @@ export default function InventoryLogsTable({ logs }: Props) {
             onClick={() => {
               setCategoryKey('all')
               setSearch('')
+              resetPage()
             }}
             className="mt-3 rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
           >
@@ -291,6 +354,8 @@ export default function InventoryLogsTable({ logs }: Props) {
         </div>
       ) : (
         <>
+          {renderPaginationControls()}
+
           <div className="hidden overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 md:block">
             <table className="min-w-[1500px] table-fixed text-sm">
               <colgroup>
@@ -312,7 +377,7 @@ export default function InventoryLogsTable({ logs }: Props) {
               </thead>
 
               <tbody>
-                {filteredLogs.map((log) => {
+                {pageLogs.map((log) => {
                   const change = Number(log.change_qty || 0)
                   const category = getCategory(log.log_type)
                   const changeClass =
@@ -374,7 +439,7 @@ export default function InventoryLogsTable({ logs }: Props) {
           </div>
 
           <div className="space-y-3 md:hidden">
-            {filteredLogs.map((log) => {
+            {pageLogs.map((log) => {
               const change = Number(log.change_qty || 0)
               const category = getCategory(log.log_type)
               const changeClass =
@@ -431,6 +496,8 @@ export default function InventoryLogsTable({ logs }: Props) {
               )
             })}
           </div>
+
+          {renderPaginationControls()}
         </>
       )}
     </div>

@@ -13,6 +13,7 @@ type PageProps = {
     dateTo?: string
     sort?: string
     dir?: string
+    page?: string
   }>
 }
 
@@ -36,6 +37,8 @@ const validSortKeys = new Set([
 
 type OrdersTableOrders = Parameters<typeof OrdersTable>[0]['orders']
 
+const PAGE_SIZE = 50
+
 function cleanSearchText(value: string) {
   return value.replace(/[,()]/g, ' ').replace(/\s+/g, ' ').trim()
 }
@@ -51,12 +54,16 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     ? String(sp.sort)
     : 'created_at'
   const dir = sp.dir === 'asc' ? 'asc' : 'desc'
+  const page = Math.max(1, Math.floor(Number(sp.page || 1)) || 1)
+  const rangeFrom = (page - 1) * PAGE_SIZE
+  const rangeTo = rangeFrom + PAGE_SIZE - 1
   const dateRange = getEasternDateRangeUtc(dateFrom, dateTo)
 
   let query = supabaseAdmin
     .from('orders')
     .select(
-      'id, order_no, address, note, status, image_path, image_paths, total_items, created_at'
+      'id, order_no, address, note, status, image_path, image_paths, total_items, created_at',
+      { count: 'exact' }
     )
 
   if (status !== '全部' && validStatuses.has(status)) {
@@ -85,9 +92,9 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     }
   }
 
-  const { data: orders, error } = await query.order(sort, {
+  const { data: orders, error, count } = await query.order(sort, {
     ascending: dir === 'asc',
-  })
+  }).range(rangeFrom, rangeTo)
 
   if (error) {
     return (
@@ -127,6 +134,12 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
             dateTo,
             sort,
             dir,
+            page,
+          }}
+          pagination={{
+            page,
+            pageSize: PAGE_SIZE,
+            totalItems: count || 0,
           }}
         />
     </PageShell>
