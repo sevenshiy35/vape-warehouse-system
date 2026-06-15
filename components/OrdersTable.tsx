@@ -110,7 +110,7 @@ function getStatusLabel(status: string) {
 }
 
 function getOrderIdColorClass(status: string) {
-  if (status === 'completed') {
+  if (status === 'completed' || status === 'cancelled') {
     return 'text-blue-600 dark:text-blue-400'
   }
 
