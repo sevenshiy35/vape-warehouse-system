@@ -99,6 +99,14 @@ function getStatusLabel(status: string) {
   return statusOptions.find((item) => item.value === status)?.label || status
 }
 
+function getOrderIdColorClass(status: string) {
+  if (status === 'completed') {
+    return 'text-blue-600 dark:text-blue-400'
+  }
+
+  return 'text-orange-600 dark:text-orange-300'
+}
+
 function getImageCount(order: Order) {
   if (Array.isArray(order.image_paths) && order.image_paths.length > 0) {
     return order.image_paths.length
@@ -266,7 +274,7 @@ export default function OrdersTable({ orders, filters }: Props) {
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xl font-bold text-orange-600 dark:text-orange-300">
+                  <p className={`text-xl font-bold ${getOrderIdColorClass(order.status)}`}>
                     {order.order_no}
                   </p>
 
@@ -386,7 +394,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                   <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
                     <Link
                       href={`/admin/orders/${order.id}`}
-                      className="text-orange-600 hover:underline dark:text-orange-300"
+                      className={`${getOrderIdColorClass(order.status)} hover:underline`}
                     >
                       {order.order_no}
                     </Link>
