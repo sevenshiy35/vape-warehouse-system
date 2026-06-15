@@ -69,7 +69,7 @@ export default async function PickingPage({ searchParams }: PageProps) {
         actions={
           <>
             <NavButton href="/">首页</NavButton>
-            <NavButton href="/admin/orders" variant="primary">
+            <NavButton href="/admin/orders" variant="warning">
               订单列表
             </NavButton>
             <NavButton href="/admin/inventory">库存列表</NavButton>

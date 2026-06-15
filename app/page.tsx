@@ -202,7 +202,7 @@ export default async function HomePage() {
                 <NavButton href="/submit-order" variant="primary">
                   提交新订单
                 </NavButton>
-                <NavButton href="/admin/orders">
+                <NavButton href="/admin/orders" variant="warning">
                   查看订单
                 </NavButton>
                 <NavButton href="/admin/picking" variant="success">
@@ -300,7 +300,7 @@ export default async function HomePage() {
                 </h2>
               </div>
 
-              <NavButton href="/admin/orders" variant="quiet">
+              <NavButton href="/admin/orders" variant="warning">
                 查看全部订单
               </NavButton>
             </div>
@@ -318,11 +318,11 @@ export default async function HomePage() {
                     <Link
                       key={order.id}
                       href={`/admin/orders/${order.id}`}
-                      className="block rounded-2xl border border-zinc-200 bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-blue-800 dark:hover:bg-zinc-900"
+                      className="block rounded-2xl border border-zinc-200 bg-[var(--surface-soft)] p-4 transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-white hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-orange-800 dark:hover:bg-zinc-900"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-lg font-bold tracking-[-0.02em] text-[var(--primary)]">
+                          <p className="text-lg font-bold tracking-[-0.02em] text-orange-600 dark:text-orange-300">
                             {order.order_no}
                           </p>
                           <p className="mt-1 truncate text-sm text-zinc-600 dark:text-zinc-300">

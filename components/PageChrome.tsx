@@ -16,7 +16,14 @@ type PageHeaderProps = {
 type NavButtonProps = {
   href: string
   children: ReactNode
-  variant?: 'default' | 'primary' | 'dark' | 'success' | 'danger' | 'quiet'
+  variant?:
+    | 'default'
+    | 'primary'
+    | 'dark'
+    | 'success'
+    | 'warning'
+    | 'danger'
+    | 'quiet'
 }
 
 type PanelProps = {
@@ -94,6 +101,8 @@ export function NavButton({
       'border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-300/40 hover:bg-zinc-800 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200',
     success:
       'border-[var(--success)] bg-[var(--success)] text-white shadow-sm shadow-green-500/20 hover:brightness-95',
+    warning:
+      'border-[var(--warning)] bg-[var(--warning)] text-white shadow-sm shadow-orange-500/20 hover:brightness-95',
     danger:
       'border-[var(--danger)] bg-[var(--danger)] text-white shadow-sm shadow-red-500/20 hover:brightness-95',
     quiet:

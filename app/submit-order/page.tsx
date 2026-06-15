@@ -210,7 +210,7 @@ export default function SubmitOrderPage() {
         actions={
           <>
             <NavButton href="/">首页</NavButton>
-            <NavButton href="/admin/orders" variant="primary">
+            <NavButton href="/admin/orders" variant="warning">
               订单列表
             </NavButton>
           </>
@@ -433,14 +433,14 @@ export default function SubmitOrderPage() {
               <div className="mt-4 flex flex-col gap-3">
                 <Link
                   href={`/admin/orders/${createdOrder.id}`}
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-600 dark:hover:bg-green-500"
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-orange-500/20 hover:brightness-95"
                 >
                   查看订单详情
                 </Link>
 
                 <Link
                   href="/admin/orders"
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-green-300 px-4 py-2 text-sm font-medium text-green-800 hover:bg-green-100 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-950"
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg border border-orange-300 px-4 py-2 text-sm font-medium text-orange-800 hover:bg-orange-100 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-950"
                 >
                   返回订单列表
                 </Link>

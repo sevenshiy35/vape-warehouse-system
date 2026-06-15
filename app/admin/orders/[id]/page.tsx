@@ -132,7 +132,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
     return (
       <PageShell>
         <div className="mb-4">
-          <NavButton href="/admin/orders">返回订单列表</NavButton>
+          <NavButton href="/admin/orders" variant="warning">
+            返回订单列表
+          </NavButton>
         </div>
 
         <PageHeader title="订单详情" />
@@ -373,7 +375,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
   return (
     <PageShell>
       <div className="mb-4">
-        <NavButton href="/admin/orders">返回订单列表</NavButton>
+        <NavButton href="/admin/orders" variant="warning">
+          返回订单列表
+        </NavButton>
       </div>
 
       <PageHeader

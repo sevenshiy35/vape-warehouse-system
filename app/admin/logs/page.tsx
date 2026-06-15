@@ -47,7 +47,9 @@ export default async function AdminLogsPage() {
         actions={
           <>
             <NavButton href="/">首页</NavButton>
-            <NavButton href="/admin/orders">订单列表</NavButton>
+            <NavButton href="/admin/orders" variant="warning">
+              订单列表
+            </NavButton>
             <NavButton href="/admin/inventory" variant="primary">
               库存列表
             </NavButton>

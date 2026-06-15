@@ -266,7 +266,7 @@ export default function OrdersTable({ orders, filters }: Props) {
             >
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                  <p className="text-xl font-bold text-orange-600 dark:text-orange-300">
                     {order.order_no}
                   </p>
 
@@ -324,7 +324,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                 </div>
               </div>
 
-              <div className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-center text-sm font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+              <div className="mt-4 rounded-lg bg-orange-50 px-3 py-2 text-center text-sm font-medium text-orange-700 dark:bg-orange-950/40 dark:text-orange-300">
                 查看订单详情
               </div>
             </Link>
@@ -386,7 +386,7 @@ export default function OrdersTable({ orders, filters }: Props) {
                   <td className="border-b border-gray-200 p-3 font-medium dark:border-gray-800">
                     <Link
                       href={`/admin/orders/${order.id}`}
-                      className="text-blue-600 hover:underline dark:text-blue-400"
+                      className="text-orange-600 hover:underline dark:text-orange-300"
                     >
                       {order.order_no}
                     </Link>

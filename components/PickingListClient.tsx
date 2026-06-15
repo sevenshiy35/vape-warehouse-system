@@ -367,7 +367,7 @@ export default function PickingListClient({
                 <p className="text-gray-500 dark:text-gray-400">OrderID</p>
                 <Link
                   href={`/admin/orders/${selectedOrder.id}`}
-                  className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  className="font-medium text-orange-600 hover:underline dark:text-orange-300"
                 >
                   {selectedOrder.order_no}
                 </Link>
