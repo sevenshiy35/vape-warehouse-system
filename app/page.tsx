@@ -1,8 +1,9 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { NavButton, PageShell, Panel, StatCard } from '@/components/PageChrome'
+import { NavButton, PageShell, Panel } from '@/components/PageChrome'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { formatEasternTime } from '@/lib/time'
-import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
+import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,41 @@ const quickActions = [
     description: '只调整货架位置',
     href: '/admin/location-move',
     tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
+  },
+]
+
+const vapeIconTiles = [
+  {
+    src: '/icons/batch/green-plum-tea-128.png',
+    motionClass: styles.vapeIconFloat,
+  },
+  {
+    src: '/icons/batch/spring-blossom-128.png',
+    motionClass: styles.vapeIconTilt,
+  },
+  {
+    src: '/icons/batch/peach-128.png',
+    motionClass: styles.vapeIconPulse,
+  },
+  {
+    src: '/icons/batch/apple-128.png',
+    motionClass: styles.vapeIconFloat,
+  },
+  {
+    src: '/icons/batch/bubblemon-128.png',
+    motionClass: styles.vapeIconHop,
+  },
+  {
+    src: '/icons/batch/lychee-128.png',
+    motionClass: styles.vapeIconTilt,
+  },
+  {
+    src: '/icons/batch/rose-gold-128.png',
+    motionClass: styles.vapeIconPulse,
+  },
+  {
+    src: '/icons/batch/pineapple-lemonade-128.png',
+    motionClass: styles.vapeIconTilt,
   },
 ]
 
@@ -102,41 +138,10 @@ function getLogChange(value: number | null) {
   return change > 0 ? `+${change}` : String(change)
 }
 
-function getInventoryStats(products: ProductWithInventory[]) {
-  return products.reduce(
-    (stats, product) => {
-      const inventory = getInventoryRecord(product)
-      const quantity = Number(inventory?.quantity_on_hand || 0)
-      const threshold = Number(inventory?.low_stock_threshold || 3)
-      const shelfLocation = String(inventory?.shelf_location || '').trim()
-
-      if (quantity === 0) {
-        stats.outOfStock += 1
-      }
-
-      if (quantity > 0 && quantity <= threshold) {
-        stats.lowStock += 1
-      }
-
-      if (quantity > 0 && !shelfLocation) {
-        stats.missingLocation += 1
-      }
-
-      return stats
-    },
-    {
-      lowStock: 0,
-      outOfStock: 0,
-      missingLocation: 0,
-    }
-  )
-}
-
 export default async function HomePage() {
   const [
     needReviewResult,
     pickingResult,
-    productsResult,
     workOrdersResult,
     recentLogsResult,
   ] = await Promise.all([
@@ -148,20 +153,6 @@ export default async function HomePage() {
       .from('orders')
       .select('id', { count: 'exact', head: true })
       .in('status', ['picking', 'picking_editing']),
-    supabaseAdmin.from('products').select(`
-      id,
-      sku,
-      brand,
-      product_name_cn,
-      display_name,
-      product_name_en,
-      inventory (
-        shelf_location,
-        quantity_on_hand,
-        low_stock_threshold,
-        updated_at
-      )
-    `),
     supabaseAdmin
       .from('orders')
       .select('id, order_no, address, status, total_items, created_at')
@@ -175,8 +166,6 @@ export default async function HomePage() {
       .limit(5),
   ])
 
-  const products = (productsResult.data || []) as ProductWithInventory[]
-  const inventoryStats = getInventoryStats(products)
   const workOrders = (workOrdersResult.data || []) as WorkOrder[]
   const recentLogs = (recentLogsResult.data || []) as RecentLog[]
 
@@ -261,31 +250,20 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            label="待确认订单"
-            value={needReviewResult.count || 0}
-            description="需要核对 AI 识别结果"
-            tone="warning"
-          />
-          <StatCard
-            label="拣货中订单"
-            value={pickingResult.count || 0}
-            description="正在仓库处理的订单"
-            tone="success"
-          />
-          <StatCard
-            label="低库存 SKU"
-            value={inventoryStats.lowStock}
-            description="库存大于 0 且低于阈值"
-            tone="primary"
-          />
-          <StatCard
-            label="无库存 / 缺库位"
-            value={inventoryStats.outOfStock + inventoryStats.missingLocation}
-            description={`无库存 ${inventoryStats.outOfStock}，缺库位 ${inventoryStats.missingLocation}`}
-            tone="danger"
-          />
+        <section className={styles.vapeIconStrip} aria-label="电子烟图标动画">
+          {vapeIconTiles.map((icon) => (
+            <div className={styles.vapeIconTile} key={icon.src}>
+              <Image
+                className={`${styles.vapeIcon} ${icon.motionClass}`}
+                src={icon.src}
+                alt=""
+                width={128}
+                height={128}
+                loading="eager"
+              />
+              <span className={styles.vapeIconShadow} />
+            </div>
+          ))}
         </section>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
