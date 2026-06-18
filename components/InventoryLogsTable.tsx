@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { formatEasternTime } from '@/lib/time'
 
 export type InventoryLogRow = {
@@ -199,12 +199,6 @@ export default function InventoryLogsTable({ logs }: Props) {
   const visibleEnd = Math.min(pageStartIndex + PAGE_SIZE, filteredLogs.length)
   const canGoPrevious = normalizedPage > 1
   const canGoNext = normalizedPage < totalPages
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages)
-    }
-  }, [page, totalPages])
 
   function resetPage() {
     setPage(1)

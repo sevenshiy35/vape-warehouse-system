@@ -26,6 +26,8 @@ type NavButtonProps = {
     | 'quiet'
 }
 
+type ActionButtonVariant = NonNullable<NavButtonProps['variant']>
+
 type PanelProps = {
   children: ReactNode
   className?: string
@@ -36,6 +38,36 @@ type StatCardProps = {
   value: ReactNode
   description?: string
   tone?: 'default' | 'primary' | 'success' | 'warning' | 'danger'
+}
+
+type StatusBadgeProps = {
+  children: ReactNode
+  tone?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'neutral'
+  className?: string
+}
+
+export function getActionButtonClass(variant: ActionButtonVariant = 'default') {
+  const base =
+    'inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50'
+
+  const variants: Record<ActionButtonVariant, string> = {
+    default:
+      'border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800',
+    primary:
+      'border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm shadow-blue-500/15 hover:bg-[var(--primary-hover)]',
+    dark:
+      'border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-300/30 hover:bg-zinc-800 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200',
+    success:
+      'border-[var(--success)] bg-[var(--success)] text-white shadow-sm shadow-green-500/15 hover:brightness-95',
+    warning:
+      'border-orange-300 bg-orange-50 text-orange-800 hover:border-orange-400 hover:bg-orange-100 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-200 dark:hover:bg-orange-950/60',
+    danger:
+      'border-[var(--danger)] bg-[var(--danger)] text-white shadow-sm shadow-red-500/15 hover:brightness-95',
+    quiet:
+      'border-transparent bg-transparent text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-zinc-900',
+  }
+
+  return `${base} ${variants[variant]}`
 }
 
 export function PageShell({
@@ -89,28 +121,8 @@ export function NavButton({
   children,
   variant = 'default',
 }: NavButtonProps) {
-  const base =
-    'inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 focus:ring-offset-[var(--background)]'
-
-  const variants = {
-    default:
-      'border-zinc-300 bg-white text-zinc-900 shadow-sm shadow-zinc-200/60 hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-none dark:hover:bg-zinc-800',
-    primary:
-      'border-[var(--primary)] bg-[var(--primary)] text-white shadow-sm shadow-blue-500/20 hover:bg-[var(--primary-hover)]',
-    dark:
-      'border-zinc-950 bg-zinc-950 text-white shadow-sm shadow-zinc-300/40 hover:bg-zinc-800 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200',
-    success:
-      'border-[var(--success)] bg-[var(--success)] text-white shadow-sm shadow-green-500/20 hover:brightness-95',
-    warning:
-      'border-[var(--warning)] bg-[var(--warning)] text-white shadow-sm shadow-orange-500/20 hover:brightness-95',
-    danger:
-      'border-[var(--danger)] bg-[var(--danger)] text-white shadow-sm shadow-red-500/20 hover:brightness-95',
-    quiet:
-      'border-transparent bg-transparent text-zinc-700 hover:bg-white/70 dark:text-zinc-200 dark:hover:bg-zinc-900',
-  }
-
   return (
-    <Link href={href} className={`${base} ${variants[variant]}`}>
+    <Link href={href} className={getActionButtonClass(variant)}>
       {children}
     </Link>
   )
@@ -161,5 +173,34 @@ export function StatCard({
         </p>
       )}
     </div>
+  )
+}
+
+export function StatusBadge({
+  children,
+  tone = 'default',
+  className = '',
+}: StatusBadgeProps) {
+  const tones = {
+    default:
+      'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-200',
+    neutral:
+      'border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200',
+    primary:
+      'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200',
+    success:
+      'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/40 dark:text-green-200',
+    warning:
+      'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950/40 dark:text-orange-200',
+    danger:
+      'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200',
+  }
+
+  return (
+    <span
+      className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${tones[tone]} ${className}`}
+    >
+      {children}
+    </span>
   )
 }

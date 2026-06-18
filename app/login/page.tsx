@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function sanitizeNext(value: string | null) {
   if (!value) return "/admin/orders";
@@ -14,15 +14,16 @@ function sanitizeNext(value: string | null) {
 }
 
 export default function LoginPage() {
-  const [next, setNext] = useState("/admin/orders");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  function getNextPath() {
+    if (typeof window === "undefined") return "/admin/orders";
+
     const params = new URLSearchParams(window.location.search);
-    setNext(sanitizeNext(params.get("next")));
-  }, []);
+    return sanitizeNext(params.get("next"));
+  }
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -45,7 +46,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.assign(next);
+      window.location.assign(getNextPath());
     } catch {
       setError("登录失败，请稍后再试");
       setLoading(false);

@@ -28,24 +28,28 @@ type RecentLog = {
 const quickActions = [
   {
     title: '入库',
+    icon: '入',
     description: '已有 SKU 到货补库存',
     href: '/admin/inbound',
     tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '添加新品',
+    icon: '添',
     description: '创建新 SKU 和初始库位',
     href: '/admin/products/new',
     tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '库存修正',
+    icon: '修',
     description: '盘点后修正实际数量',
     href: '/admin/correction',
     tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
   },
   {
     title: '库位挪动',
+    icon: '挪',
     description: '只调整货架位置',
     href: '/admin/location-move',
     tone: 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950',
@@ -347,7 +351,7 @@ export default async function HomePage() {
                     <span
                       className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold shadow-sm ${action.tone}`}
                     >
-                      {action.title.slice(0, 1)}
+                      {action.icon}
                     </span>
                     <span className="min-w-0">
                       <span className="block font-bold text-zinc-950 dark:text-zinc-50">

@@ -118,7 +118,9 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
             <NavButton href="/submit-order" variant="primary">
               提交新订单
             </NavButton>
-            <NavButton href="/admin/picking">拣货列表</NavButton>
+            <NavButton href="/admin/picking" variant="success">
+              进入拣货
+            </NavButton>
             <NavButton href="/admin/inventory">库存列表</NavButton>
             <NavButton href="/admin/logs">库存流水</NavButton>
           </>
