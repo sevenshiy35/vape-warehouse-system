@@ -45,6 +45,14 @@ const logCategories: LogCategory[] = [
       'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
   },
   {
+    key: 'order-adjustment',
+    label: '订单调整',
+    description: '修改拣货中订单的预扣库存',
+    type: 'OrderAdjustment',
+    badgeClass:
+      'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
+  },
+  {
     key: 'inbound',
     label: '入库',
     description: '到货补充库存',

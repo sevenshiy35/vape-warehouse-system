@@ -121,6 +121,7 @@ const orderStatusMeta: Record<
 
 const logTypeLabel: Record<string, string> = {
   Order: '订单出库',
+  OrderAdjustment: '订单调整',
   Inbound: '入库',
   Correction: '盘点修正',
   OrderReversal: '订单退回',
