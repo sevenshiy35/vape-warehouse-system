@@ -4,6 +4,8 @@ import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
+const DEFAULT_OPERATOR = 'Seven'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
     const displayName = String(body.displayName || '').trim()
     const productNameEN = String(body.productNameEN || '').trim()
     const shelfLocation = String(body.shelfLocation || '').trim()
-    const operator = String(body.operator || 'admin').trim()
+    const operator = String(body.operator || DEFAULT_OPERATOR).trim()
 
     const initialQty = Number(body.initialQty || 0)
     const lowStockThreshold = Number(body.lowStockThreshold || 3)
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
         p_initial_qty: initialQty,
         p_shelf_location: shelfLocation || null,
         p_low_stock_threshold: lowStockThreshold,
-        p_operator: operator || 'admin',
+        p_operator: operator || DEFAULT_OPERATOR,
       }
     )
 

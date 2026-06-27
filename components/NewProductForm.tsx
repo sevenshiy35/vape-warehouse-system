@@ -8,6 +8,9 @@ type Props = {
   brandOptions?: string[]
 }
 
+const DEFAULT_INITIAL_QTY = 10
+const DEFAULT_OPERATOR = 'Seven'
+
 export default function NewProductForm({ brandOptions = [] }: Props) {
   const router = useRouter()
   const { confirm, notify } = useFeedback()
@@ -17,10 +20,10 @@ export default function NewProductForm({ brandOptions = [] }: Props) {
   const [productNameCN, setProductNameCN] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [productNameEN, setProductNameEN] = useState('')
-  const [initialQty, setInitialQty] = useState(0)
+  const [initialQty, setInitialQty] = useState(DEFAULT_INITIAL_QTY)
   const [shelfLocation, setShelfLocation] = useState('')
   const [lowStockThreshold, setLowStockThreshold] = useState(3)
-  const [operator, setOperator] = useState('admin')
+  const [operator, setOperator] = useState(DEFAULT_OPERATOR)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -94,11 +97,10 @@ export default function NewProductForm({ brandOptions = [] }: Props) {
     setProductNameCN('')
     setDisplayName('')
     setProductNameEN('')
-    setInitialQty(0)
+    setInitialQty(DEFAULT_INITIAL_QTY)
     setShelfLocation('')
     setLowStockThreshold(3)
 
-    router.push('/admin/inventory')
     router.refresh()
   }
 
@@ -223,7 +225,7 @@ export default function NewProductForm({ brandOptions = [] }: Props) {
             className="w-full rounded border px-3 py-2"
             value={operator}
             onChange={(e) => setOperator(e.target.value)}
-            placeholder="例如 admin / Seven"
+            placeholder="例如 Seven"
           />
         </div>
       </div>

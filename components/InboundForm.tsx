@@ -6,6 +6,9 @@ import ProductPicker from '@/components/ProductPicker'
 import { useFeedback } from '@/components/FeedbackProvider'
 import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
 
+const DEFAULT_INBOUND_QTY = 10
+const DEFAULT_OPERATOR = 'Seven'
+
 type Props = {
   products: ProductWithInventory[]
 }
@@ -15,9 +18,9 @@ export default function InboundForm({ products }: Props) {
   const { confirm, notify } = useFeedback()
 
   const [productId, setProductId] = useState('')
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState(DEFAULT_INBOUND_QTY)
   const [shelfLocation, setShelfLocation] = useState('')
-  const [operator, setOperator] = useState('admin')
+  const [operator, setOperator] = useState(DEFAULT_OPERATOR)
   const [loading, setLoading] = useState(false)
 
   const selectedProduct = products.find((p) => p.id === productId)
@@ -87,7 +90,7 @@ export default function InboundForm({ products }: Props) {
 
     notify({ type: 'success', title: '入库成功' })
     setProductId('')
-    setQty(1)
+    setQty(DEFAULT_INBOUND_QTY)
     setShelfLocation('')
     router.refresh()
   }
@@ -159,7 +162,7 @@ export default function InboundForm({ products }: Props) {
           className={inputClass}
           value={operator}
           onChange={(e) => setOperator(e.target.value)}
-          placeholder="例如 admin / Seven"
+          placeholder="例如 Seven"
         />
       </div>
 

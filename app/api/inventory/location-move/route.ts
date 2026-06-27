@@ -4,13 +4,15 @@ import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
+const DEFAULT_OPERATOR = 'Seven'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
 
     const productId = body.productId as string
     const newShelfLocation = String(body.newShelfLocation || '').trim()
-    const operator = String(body.operator || 'admin').trim()
+    const operator = String(body.operator || DEFAULT_OPERATOR).trim()
     const reason = String(body.reason || 'Location move').trim()
 
     if (!productId) {
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
     const { error } = await supabaseAdmin.rpc('move_inventory_location', {
       p_product_id: productId,
       p_new_shelf_location: newShelfLocation,
-      p_operator: operator || 'admin',
+      p_operator: operator || DEFAULT_OPERATOR,
       p_reason: reason || 'Location move',
     })
 

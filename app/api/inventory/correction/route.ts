@@ -4,6 +4,8 @@ import { getErrorMessage } from '@/lib/errors'
 
 export const runtime = 'nodejs'
 
+const DEFAULT_OPERATOR = 'Seven'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -11,7 +13,7 @@ export async function POST(request: Request) {
     const productId = body.productId as string
     const actualQty = Number(body.actualQty)
     const shelfLocation = body.shelfLocation as string | null
-    const operator = (body.operator as string) || 'admin'
+    const operator = (body.operator as string) || DEFAULT_OPERATOR
     const reason = (body.reason as string) || 'Inventory correction'
 
     if (!productId) {

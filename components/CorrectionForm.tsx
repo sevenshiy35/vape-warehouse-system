@@ -6,6 +6,8 @@ import ProductPicker from '@/components/ProductPicker'
 import { useFeedback } from '@/components/FeedbackProvider'
 import { getInventoryRecord, type ProductWithInventory } from '@/lib/types'
 
+const DEFAULT_OPERATOR = 'Seven'
+
 type Props = {
   products: ProductWithInventory[]
 }
@@ -17,7 +19,7 @@ export default function CorrectionForm({ products }: Props) {
   const [productId, setProductId] = useState('')
   const [actualQty, setActualQty] = useState(0)
   const [shelfLocation, setShelfLocation] = useState('')
-  const [operator, setOperator] = useState('admin')
+  const [operator, setOperator] = useState(DEFAULT_OPERATOR)
   const [reason, setReason] = useState('Inventory correction')
   const [loading, setLoading] = useState(false)
 
@@ -199,7 +201,7 @@ export default function CorrectionForm({ products }: Props) {
           className={inputClass}
           value={operator}
           onChange={(e) => setOperator(e.target.value)}
-          placeholder="例如 admin / Seven"
+          placeholder="例如 Seven"
         />
       </div>
 
