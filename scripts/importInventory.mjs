@@ -71,6 +71,11 @@ function getBrandFromSheet(sheetName) {
   return sheetName
 }
 
+function getDefaultPickMultiplier(brand) {
+  if (brand === 'Yohuu烟弹') return 3
+  return null
+}
+
 async function importInventory() {
   console.log('Reading Excel:', EXCEL_PATH)
 
@@ -130,6 +135,7 @@ async function importInventory() {
       }
 
       const brand = getBrandFromSheet(sheetName)
+      const defaultPickMultiplier = getDefaultPickMultiplier(brand)
 
       let quantityOnHand = normalQty
 
@@ -143,18 +149,24 @@ async function importInventory() {
       const finalShelfLocation =
         quantityOnHand === 0 ? null : shelfLocation
 
+      const productPayload = {
+        sku,
+        brand,
+        product_name_cn: productNameCN,
+        display_name: displayName,
+        product_name_en: productNameEN,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      }
+
+      if (defaultPickMultiplier) {
+        productPayload.default_pick_multiplier = defaultPickMultiplier
+      }
+
       const { data: product, error: productError } = await supabase
         .from('products')
         .upsert(
-          {
-            sku,
-            brand,
-            product_name_cn: productNameCN,
-            display_name: displayName,
-            product_name_en: productNameEN,
-            is_active: true,
-            updated_at: new Date().toISOString(),
-          },
+          productPayload,
           {
             onConflict: 'sku',
           }

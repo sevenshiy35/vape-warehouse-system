@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/lib/errors'
 export const runtime = 'nodejs'
 
 const DEFAULT_OPERATOR = 'Seven'
+const YOHUU_POD_BRAND = 'Yohuu烟弹'
 
 export async function POST(request: Request) {
   try {
@@ -76,6 +77,23 @@ export async function POST(request: Request) {
         { error: error.message },
         { status: 400 }
       )
+    }
+
+    if (brand === YOHUU_POD_BRAND) {
+      const { error: multiplierError } = await supabaseAdmin
+        .from('products')
+        .update({
+          default_pick_multiplier: 3,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', productId)
+
+      if (multiplierError) {
+        return NextResponse.json(
+          { error: multiplierError.message },
+          { status: 400 }
+        )
+      }
     }
 
     const { data: product, error: productError } = await supabaseAdmin
