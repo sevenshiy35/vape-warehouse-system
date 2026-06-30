@@ -68,7 +68,7 @@ export default function ConfirmOrderButton({ orderId, status }: Props) {
     }
 
     notify({ type: 'success', title: '订单已确认，已进入拣货中' })
-    router.refresh()
+    router.push('/admin/orders')
   }
 
  const disabled =
