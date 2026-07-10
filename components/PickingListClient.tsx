@@ -1,7 +1,12 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import CompletePickingButton from '@/components/CompletePickingButton'
+
+const ORDER_SELECTOR_ID = 'order-selector'
+const PICKING_COMPLETE_SCROLL_KEY = 'scrollToPickingOrderSelector'
+const PICKING_SELECTOR_HREF = `/admin/picking#${ORDER_SELECTOR_ID}`
 
 type OrderItem = {
   id: string
@@ -44,13 +49,31 @@ function sortLocation(a: string, b: string) {
 }
 
 function getPickingHref(orderId: string) {
-  return `/admin/picking?orderId=${encodeURIComponent(orderId)}#order-selector`
+  return `/admin/picking?orderId=${encodeURIComponent(
+    orderId
+  )}#${ORDER_SELECTOR_ID}`
 }
 
 export default function PickingListClient({
   orders,
   selectedOrderId,
 }: Props) {
+  useEffect(() => {
+    const shouldScrollToSelector =
+      window.location.hash === `#${ORDER_SELECTOR_ID}` ||
+      window.sessionStorage.getItem(PICKING_COMPLETE_SCROLL_KEY) === '1'
+
+    if (!shouldScrollToSelector) return
+
+    window.sessionStorage.removeItem(PICKING_COMPLETE_SCROLL_KEY)
+    window.requestAnimationFrame(() => {
+      document.getElementById(ORDER_SELECTOR_ID)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }, [orders.length, selectedOrderId])
+
   const selectedOrder =
     orders.find((order) => order.id === selectedOrderId) || orders[0] || null
 
@@ -113,7 +136,10 @@ export default function PickingListClient({
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div
+        id={ORDER_SELECTOR_ID}
+        className="scroll-mt-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+      >
         <p className="text-gray-500 dark:text-gray-400">
           暂无拣货中订单。
         </p>
@@ -124,7 +150,7 @@ export default function PickingListClient({
   return (
     <div className="space-y-6 pb-28 md:pb-0">
       <section
-        id="order-selector"
+        id={ORDER_SELECTOR_ID}
         className="scroll-mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 md:p-5"
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -219,6 +245,8 @@ export default function PickingListClient({
               <CompletePickingButton
                 orderId={selectedOrder.id}
                 status={selectedOrder.status}
+                completeHref={PICKING_SELECTOR_HREF}
+                scrollToPickingSelector
               />
             )}
           </div>
@@ -453,6 +481,8 @@ export default function PickingListClient({
             <CompletePickingButton
               orderId={selectedOrder.id}
               status={selectedOrder.status}
+              completeHref={PICKING_SELECTOR_HREF}
+              scrollToPickingSelector
             />
           </div>
         </div>

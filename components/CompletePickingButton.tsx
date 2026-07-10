@@ -4,12 +4,21 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFeedback } from '@/components/FeedbackProvider'
 
+const PICKING_COMPLETE_SCROLL_KEY = 'scrollToPickingOrderSelector'
+
 type Props = {
   orderId: string
   status: string
+  completeHref?: string
+  scrollToPickingSelector?: boolean
 }
 
-export default function CompletePickingButton({ orderId, status }: Props) {
+export default function CompletePickingButton({
+  orderId,
+  status,
+  completeHref = '/admin/orders',
+  scrollToPickingSelector = false,
+}: Props) {
   const router = useRouter()
   const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
@@ -51,7 +60,10 @@ export default function CompletePickingButton({ orderId, status }: Props) {
     }
 
     notify({ type: 'success', title: '拣货完成' })
-    router.refresh()
+    if (scrollToPickingSelector) {
+      window.sessionStorage.setItem(PICKING_COMPLETE_SCROLL_KEY, '1')
+    }
+    router.push(completeHref)
   }
 
   return (
