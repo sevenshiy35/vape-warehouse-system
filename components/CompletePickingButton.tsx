@@ -64,6 +64,7 @@ export default function CompletePickingButton({
       window.sessionStorage.setItem(PICKING_COMPLETE_SCROLL_KEY, '1')
     }
     router.push(completeHref)
+    router.refresh()
   }
 
   return (
