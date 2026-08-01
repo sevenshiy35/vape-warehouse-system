@@ -6,6 +6,7 @@ export const runtime = 'nodejs'
 
 const DEFAULT_OPERATOR = 'Seven'
 const YOHUU_POD_BRAND = 'Yohuu烟弹'
+const TOBACCO_BRAND = '真烟'
 
 export async function POST(request: Request) {
   try {
@@ -79,11 +80,18 @@ export async function POST(request: Request) {
       )
     }
 
-    if (brand === YOHUU_POD_BRAND) {
+    const multiplierUpdate =
+      brand === YOHUU_POD_BRAND
+        ? { default_pick_multiplier: 3 }
+        : brand === TOBACCO_BRAND
+          ? { carton_pick_multiplier: 10 }
+          : null
+
+    if (multiplierUpdate) {
       const { error: multiplierError } = await supabaseAdmin
         .from('products')
         .update({
-          default_pick_multiplier: 3,
+          ...multiplierUpdate,
           updated_at: new Date().toISOString(),
         })
         .eq('id', productId)

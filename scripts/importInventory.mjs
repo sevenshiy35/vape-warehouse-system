@@ -76,6 +76,11 @@ function getDefaultPickMultiplier(brand) {
   return null
 }
 
+function getCartonPickMultiplier(brand) {
+  if (brand === '真烟') return 10
+  return null
+}
+
 async function importInventory() {
   console.log('Reading Excel:', EXCEL_PATH)
 
@@ -136,6 +141,7 @@ async function importInventory() {
 
       const brand = getBrandFromSheet(sheetName)
       const defaultPickMultiplier = getDefaultPickMultiplier(brand)
+      const cartonPickMultiplier = getCartonPickMultiplier(brand)
 
       let quantityOnHand = normalQty
 
@@ -161,6 +167,10 @@ async function importInventory() {
 
       if (defaultPickMultiplier) {
         productPayload.default_pick_multiplier = defaultPickMultiplier
+      }
+
+      if (cartonPickMultiplier) {
+        productPayload.carton_pick_multiplier = cartonPickMultiplier
       }
 
       const { data: product, error: productError } = await supabase

@@ -16,6 +16,7 @@ const UNIT_PIECE = RECOGNIZED_UNITS[0]
 const UNIT_BOX = RECOGNIZED_UNITS[1]
 const UNIT_CARTON = RECOGNIZED_UNITS[2]
 const UNIT_UNKNOWN = RECOGNIZED_UNITS[4]
+const TOBACCO_BRAND = '\u771f\u70df'
 
 const RecognizedOrderSchema = z.object({
   items: z.array(
@@ -169,6 +170,25 @@ function stripTobaccoUnitPrefix(value: string) {
       ''
     )
     .trim()
+}
+
+function normalizeTobaccoUnit(
+  item: RecognizedItem,
+  brand: string | null
+): RecognizedItem['unit'] {
+  if (brand?.trim() !== TOBACCO_BRAND) return item.unit
+
+  const rawText = normalizeKnownOcrAliases(stripEmoji(item.rawText))
+
+  if (/^\s*(?:\u6574\u6761|\u4e00\u6761|[1-9]\d*\s*\u6761)/u.test(rawText)) {
+    return UNIT_CARTON
+  }
+
+  if (/^\s*(?:\u5355\u5305|\u4e00\u5305|[1-9]\d*\s*\u5305)/u.test(rawText)) {
+    return UNIT_PIECE
+  }
+
+  return item.unit
 }
 
 function normalizeRecognitionText(value: string | null | undefined) {
@@ -384,7 +404,7 @@ function matchOneItem(
     brand: best.product.brand,
     productName: item.displayName,
     quantity: item.quantity,
-    unit: item.unit,
+    unit: normalizeTobaccoUnit(item, best.product.brand),
     confidence: item.confidence,
     note: null,
     matchStatus,
