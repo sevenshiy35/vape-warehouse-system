@@ -27,6 +27,9 @@ type SortDirection = 'asc' | 'desc'
 
 const statusFilters = ['全部', 'OK', '低库存', '无库存', '缺少库位'] as const
 
+const statusBadgeClass =
+  'inline-flex h-8 w-20 shrink-0 items-center justify-center whitespace-nowrap rounded px-2 text-center text-xs font-medium leading-none'
+
 const sortOptions: { value: SortKey; label: string }[] = [
   { value: 'brand', label: '品牌' },
   { value: 'sku', label: 'SKU' },
@@ -542,7 +545,7 @@ export default function InventoryTable({ products }: Props) {
                   </div>
 
                   <span
-                    className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${statusClass}`}
+                    className={`${statusBadgeClass} ${statusClass}`}
                   >
                     {status}
                   </span>
@@ -672,7 +675,7 @@ export default function InventoryTable({ products }: Props) {
                     </td>
 
                     <td className="border-b border-gray-200 p-3 dark:border-gray-800">
-                      <span className={`rounded px-2 py-1 ${statusClass}`}>
+                      <span className={`${statusBadgeClass} ${statusClass}`}>
                         {status}
                       </span>
                     </td>
