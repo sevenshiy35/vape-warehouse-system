@@ -589,7 +589,7 @@ Rules:
 6. For tobacco, \u5355\u5305/\u4e00\u5305 only means unit=${UNIT_PIECE}; remove it from displayName. \u6574\u6761/\u4e00\u6761 means unit=${UNIT_CARTON}; remove it from displayName.
 7. Tobacco OCR hints: \u714c\u8d6b\u95e8=\u714a\u8d6b\u95e8, \u5341\u4e8c\u6743/\u5341\u4e8c\u6748=\u5341\u4e8c\u9497.
 8. RELX OCR hint: \u83e0\u841d\u521b\u51b0=\u83e0\u841d\u5228\u51b0. Treat Relx \u52a0\u6d53\u7248\u83e0\u841d\u521b\u51b0 as Relx \u52a0\u6d53\u7248\u83e0\u841d\u5228\u51b0, not \u9178\u751c\u83e0\u841d\u51b0\u6c99.
-9. Price x qty examples: 14x5, $14 x 5, \u00a514*5 => quantity=5. Prefer x5, \u00d75, qty5, 5${UNIT_PIECE}, 5${UNIT_BOX}, 5${UNIT_CARTON}. Never use price, total, shipping, phone, or address as quantity.
+9. In price x qty lines, use the number after x/\u00d7/*: "18x2 ... $36" => quantity=2. Never use unit price, $/\u00a5 amount, or line total.
       `.trim(),
     },
   ]
