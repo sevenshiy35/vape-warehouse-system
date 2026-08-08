@@ -17,6 +17,7 @@ const UNIT_BOX = RECOGNIZED_UNITS[1]
 const UNIT_CARTON = RECOGNIZED_UNITS[2]
 const UNIT_UNKNOWN = RECOGNIZED_UNITS[4]
 const TOBACCO_BRAND = '\u771f\u70df'
+const YOHUU_POD_BRAND = 'Yohuu\u70df\u5f39'
 
 const RecognizedOrderSchema = z.object({
   items: z.array(
@@ -189,6 +190,15 @@ function normalizeTobaccoUnit(
   }
 
   return item.unit
+}
+
+function normalizeMatchedUnit(
+  item: RecognizedItem,
+  brand: string | null
+): RecognizedItem['unit'] {
+  if (brand?.trim() === YOHUU_POD_BRAND) return UNIT_BOX
+
+  return normalizeTobaccoUnit(item, brand)
 }
 
 function normalizeRecognitionText(value: string | null | undefined) {
@@ -404,7 +414,7 @@ function matchOneItem(
     brand: best.product.brand,
     productName: item.displayName,
     quantity: item.quantity,
-    unit: normalizeTobaccoUnit(item, best.product.brand),
+    unit: normalizeMatchedUnit(item, best.product.brand),
     confidence: item.confidence,
     note: null,
     matchStatus,
@@ -585,7 +595,7 @@ Rules:
 2. Ignore address, phone, price, total, delivery fee, and shipping.
 3. If the same product appears in multiple screenshots, keep it once.
 4. If screenshots contain different product lists, merge all products.
-5. For Yohuu pods, if the image says 1${UNIT_BOX}, return quantity=1 and unit=${UNIT_BOX}; do not convert.
+5. Yohuu pods are sold as boxes of 3 pods. For every Yohuu pod line, return unit=${UNIT_BOX} even if the screenshot omits the unit, says \u4e2a/\u652f, or says \u4e09\u9897\u88c5. Keep quantity as the number of boxes; do not multiply it here.
 6. For tobacco, \u5355\u5305/\u4e00\u5305 only means unit=${UNIT_PIECE}; remove it from displayName. \u6574\u6761/\u4e00\u6761 means unit=${UNIT_CARTON}; remove it from displayName.
 7. Tobacco OCR hints: \u714c\u8d6b\u95e8=\u714a\u8d6b\u95e8, \u5341\u4e8c\u6743/\u5341\u4e8c\u6748=\u5341\u4e8c\u9497.
 8. RELX OCR hint: \u83e0\u841d\u521b\u51b0=\u83e0\u841d\u5228\u51b0. Treat Relx \u52a0\u6d53\u7248\u83e0\u841d\u521b\u51b0 as Relx \u52a0\u6d53\u7248\u83e0\u841d\u5228\u51b0, not \u9178\u751c\u83e0\u841d\u51b0\u6c99.
@@ -706,7 +716,12 @@ export async function autoAddMatchedOrderItems(
       continue
     }
 
-    const unit = item.unit === UNIT_UNKNOWN ? UNIT_PIECE : item.unit
+    const unit =
+      item.matchedBrand?.trim() === YOHUU_POD_BRAND
+        ? UNIT_BOX
+        : item.unit === UNIT_UNKNOWN
+          ? UNIT_PIECE
+          : item.unit
 
     const { error } = await supabaseAdmin.rpc('add_order_item_safe', {
       p_order_id: orderId,
