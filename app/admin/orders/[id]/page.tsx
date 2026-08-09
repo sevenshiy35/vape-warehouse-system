@@ -11,6 +11,7 @@ import EditOrderInfoButton from '@/components/EditOrderInfoButton'
 import RecognizeOrderButton from '@/components/RecognizeOrderButton'
 import AddOrderImagesButton from '@/components/AddOrderImagesButton'
 import ConfirmAiOrderItemButton from '@/components/ConfirmAiOrderItemButton'
+import RecalculateOrderItemsButton from '@/components/RecalculateOrderItemsButton'
 import { NavButton, PageHeader, PageShell, Panel } from '@/components/PageChrome'
 import type { ProductWithInventory } from '@/lib/types'
 import { formatEasternTime } from '@/lib/time'
@@ -956,6 +957,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
 
               <div className="flex flex-col gap-2 [&>a]:w-full [&>button]:w-full sm:flex-row sm:flex-wrap sm:justify-end sm:[&>a]:w-auto sm:[&>button]:w-auto">
+                <RecalculateOrderItemsButton
+                  orderId={order.id}
+                  status={order.status}
+                  itemCount={(items || []).length}
+                />
+
                 {orderActions.canConfirm && (
                   <ConfirmOrderButton
                     orderId={order.id}
