@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: itemId, error } = await supabaseAdmin.rpc(
+    let { data: itemId, error } = await supabaseAdmin.rpc(
       'add_order_item_deferred_location',
       {
         p_order_id: orderId,
@@ -43,6 +43,17 @@ export async function POST(request: Request) {
         p_unit: unit,
       }
     )
+
+    if (error?.code === 'PGRST202') {
+      const fallback = await supabaseAdmin.rpc('add_order_item_safe', {
+        p_order_id: orderId,
+        p_product_id: productId,
+        p_qty: qty,
+        p_unit: unit,
+      })
+      itemId = fallback.data
+      error = fallback.error
+    }
 
     if (error) {
       return NextResponse.json(

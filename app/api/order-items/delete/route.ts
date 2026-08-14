@@ -17,12 +17,19 @@ export async function POST(request: Request) {
       )
     }
 
-    const { error } = await supabaseAdmin.rpc(
+    let { error } = await supabaseAdmin.rpc(
       'delete_order_item_and_restore_location',
       {
         p_item_id: itemId,
       }
     )
+
+    if (error?.code === 'PGRST202') {
+      const fallback = await supabaseAdmin.rpc('delete_order_item_safe', {
+        p_item_id: itemId,
+      })
+      error = fallback.error
+    }
 
     if (error) {
       return NextResponse.json(
