@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     const { data: itemId, error } = await supabaseAdmin.rpc(
-      'add_order_item_safe',
+      'add_order_item_deferred_location',
       {
         p_order_id: orderId,
         p_product_id: productId,

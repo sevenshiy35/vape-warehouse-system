@@ -16,9 +16,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const { error } = await supabaseAdmin.rpc('cancel_order_and_restore', {
-      p_order_id: orderId,
-    })
+    const { error } = await supabaseAdmin.rpc(
+      'cancel_order_and_restore_location',
+      {
+        p_order_id: orderId,
+      }
+    )
 
     if (error) {
       return NextResponse.json(

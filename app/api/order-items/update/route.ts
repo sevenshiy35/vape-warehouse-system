@@ -26,11 +26,14 @@ export async function POST(request: Request) {
       )
     }
 
-    const { error } = await supabaseAdmin.rpc('update_order_item_safe', {
-      p_item_id: itemId,
-      p_qty: qty,
-      p_unit: unit,
-    })
+    const { error } = await supabaseAdmin.rpc(
+      'update_order_item_deferred_location',
+      {
+        p_item_id: itemId,
+        p_qty: qty,
+        p_unit: unit,
+      }
+    )
 
     if (error) {
       return NextResponse.json(
