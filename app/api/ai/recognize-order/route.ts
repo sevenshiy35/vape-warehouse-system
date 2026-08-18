@@ -11,8 +11,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     const orderId = body.orderId as string
+    const force = body.force === true
 
-    const recognition = await recognizeOrder(orderId)
+    const recognition = await recognizeOrder(orderId, { force })
 
     return NextResponse.json({
       success: true,

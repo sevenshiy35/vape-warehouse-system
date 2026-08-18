@@ -67,10 +67,9 @@ function getOrderActionVisibility(status: string, aiStatus?: string | null) {
   const isPicking = status === 'picking'
   const isPickingEditing = status === 'picking_editing'
   const isAiProcessing = aiStatus === 'processing'
-  const aiCanRun = aiStatus !== 'processing' && aiStatus !== 'completed'
 
   return {
-    canRecognize: (isReviewing || isPickingEditing) && aiCanRun,
+    canRecognize: (isReviewing || isPickingEditing) && !isAiProcessing,
     canEditInfo: isEditable,
     canConfirm: isReviewing && !isAiProcessing,
     canOpenPicking: isPicking || isPickingEditing,
@@ -387,7 +386,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
         actions={
           <>
             {orderActions.canRecognize && (
-              <RecognizeOrderButton orderId={order.id} status={order.status} />
+              <RecognizeOrderButton
+                orderId={order.id}
+                status={order.status}
+                aiStatus={order.ai_status}
+              />
             )}
 
             {orderActions.canEditInfo && (

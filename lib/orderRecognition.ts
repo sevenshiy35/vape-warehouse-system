@@ -498,6 +498,7 @@ async function updateOrderAiResult(
 export async function recognizeOrder(
   orderId: string,
   options: {
+    force?: boolean
     ignoreAiStatus?: boolean
   } = {}
 ) {
@@ -532,7 +533,11 @@ export async function recognizeOrder(
       throw new OrderRecognitionError('AI recognition is already running', 409)
     }
 
-    if (order.ai_status === 'completed' && order.ai_raw_result) {
+    if (
+      !options.force &&
+      order.ai_status === 'completed' &&
+      order.ai_raw_result
+    ) {
       return {
         orderNo: order.order_no,
         result: order.ai_raw_result as OrderRecognitionResult,

@@ -41,6 +41,7 @@ type RecognizedResult = {
 type Props = {
   orderId: string
   status: string
+  aiStatus?: string | null
 }
 
 const blockedRecognitionStatuses = new Set([
@@ -68,7 +69,11 @@ function getStatusClass(status: RecognizedItem['matchStatus']) {
   return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
 }
 
-export default function RecognizeOrderButton({ orderId, status }: Props) {
+export default function RecognizeOrderButton({
+  orderId,
+  status,
+  aiStatus,
+}: Props) {
   const router = useRouter()
   const { confirm, notify } = useFeedback()
 
@@ -84,33 +89,61 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
       return
     }
 
+    const isRerun = aiStatus === 'completed' || aiStatus === 'failed'
+
+    if (isRerun) {
+      const ok = await confirm({
+        title: '重新识别并匹配这个订单？',
+        message:
+          '系统会重新读取全部订单截图，并使用当前商品资料重新匹配。现有订单商品不会被自动删除或修改。',
+        confirmText: '重新识别并匹配',
+      })
+
+      if (!ok) return
+    }
+
     setLoading(true)
     setAddedKeys({})
 
-    const res = await fetch('/api/ai/recognize-order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        orderId,
-      }),
-    })
+    try {
+      const res = await fetch('/api/ai/recognize-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          force: isRerun,
+        }),
+      })
 
-    const data = await res.json()
-    setLoading(false)
+      const data = await res.json()
 
-    if (!res.ok) {
+      if (!res.ok) {
+        notify({
+          type: 'error',
+          title: 'AI识别失败',
+          message: data.error,
+        })
+        return
+      }
+
+      setResult(data.result)
+      setOpen(true)
+      router.refresh()
+
+      if (isRerun) {
+        notify({ type: 'success', title: '已重新识别并完成库存匹配' })
+      }
+    } catch (error: unknown) {
       notify({
         type: 'error',
         title: 'AI识别失败',
-        message: data.error,
+        message: error instanceof Error ? error.message : '网络请求失败',
       })
-      return
+    } finally {
+      setLoading(false)
     }
-
-    setResult(data.result)
-    setOpen(true)
   }
 
   async function addItem(item: RecognizedItem, index: number) {
@@ -211,6 +244,7 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
     result?.items.filter((item) => item.matchStatus === 'matched' && item.productId)
       .length || 0
   const recognitionBlocked = blockedRecognitionStatuses.has(status)
+  const isRerun = aiStatus === 'completed' || aiStatus === 'failed'
 
   return (
     <>
@@ -221,7 +255,13 @@ export default function RecognizeOrderButton({ orderId, status }: Props) {
         title={recognitionBlocked ? getBlockedRecognitionMessage(status) : undefined}
         className="rounded bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700 disabled:opacity-50 dark:bg-purple-500 dark:hover:bg-purple-400"
       >
-        {loading ? '识别中...' : 'AI识别订单'}
+        {loading
+          ? isRerun
+            ? '重新识别中...'
+            : '识别中...'
+          : isRerun
+            ? '重新识别并匹配'
+            : 'AI识别订单'}
       </button>
 
       {open && result && (
