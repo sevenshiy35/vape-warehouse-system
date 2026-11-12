@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getActionButtonClass } from "./PageChrome";
 import { useFeedback } from "./FeedbackProvider";
 import type { WarehouseProduct, WarehouseBin } from "@/lib/warehouse";
+import {
+  buildProductSearchIndex,
+  normalizeSearchText,
+  scoreProductSearch,
+} from "@/lib/productSearch";
 
 type SortKey =
   | "brand"
@@ -14,7 +19,8 @@ type SortKey =
   | "product_name_en"
   | "location"
   | "quantity"
-  | "status";
+  | "status"
+  | "relevance";
 const input =
   "min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100";
 const statuses = ["全部", "OK", "低库存", "无库存", "缺少库位"];
@@ -27,6 +33,7 @@ const sortOptions: [SortKey, string][] = [
   ["location", "库位"],
   ["quantity", "库存"],
   ["status", "状态"],
+  ["relevance", "相关度"],
 ];
 function statusClass(status: string) {
   return status === "无库存"
@@ -54,12 +61,34 @@ export default function InventoryTable({
       : "全部",
   );
   const [location, setLocation] = useState(params.get("location") || "");
-  const [sort, setSort] = useState<SortKey>("brand");
+  const [sort, setSort] = useState<SortKey>(() =>
+    params.get("q")?.trim() ? "relevance" : "brand",
+  );
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   const [editing, setEditing] = useState<WarehouseProduct | null>(null);
   const [order, setOrder] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [refreshing, startRefresh] = useTransition();
+  const searchIndexes = useMemo(
+    () =>
+      new Map(
+        products.map((product) => [
+          product.id,
+          buildProductSearchIndex(product),
+        ]),
+      ),
+    [products],
+  );
+  const searchScores = useMemo(
+    () =>
+      new Map(
+        products.map((product) => [
+          product.id,
+          scoreProductSearch(searchIndexes.get(product.id)!, search),
+        ]),
+      ),
+    [products, searchIndexes, search],
+  );
   const byProduct = useMemo(() => {
     const map = new Map<string, WarehouseBin[]>();
     for (const b of bins) {
@@ -96,6 +125,10 @@ export default function InventoryTable({
     setBrand(f.brand);
     setStatus(f.status);
     setLocation(f.location);
+    if (next.q !== undefined) {
+      setSort(next.q.trim() ? "relevance" : "brand");
+      setDirection("asc");
+    }
     const query = new URLSearchParams();
     if (f.q) query.set("q", f.q);
     if (f.brand !== "全部") query.set("brand", f.brand);
@@ -109,41 +142,32 @@ export default function InventoryTable({
   }
   const rows = products
     .filter((p) => {
-      const text = [
-        p.brand,
-        p.sku,
-        p.product_name_cn,
-        p.display_name,
-        p.product_name_en,
-      ]
-        .join(" ")
-        .toLowerCase();
       return (
-        search
-          .toLowerCase()
-          .trim()
-          .split(/\s+/)
-          .every((s) => text.includes(s)) &&
+        (searchScores.get(p.id) || 0) > 0 &&
         (brand === "全部" || p.brand === brand) &&
         (status === "全部" || statusOf(p.id) === status) &&
         (!location ||
           stockOf(p.id).some((b) =>
-            b.location.toLowerCase().includes(location.toLowerCase()),
+            normalizeSearchText(b.location).includes(
+              normalizeSearchText(location),
+            ),
           ))
       );
     })
     .sort((a, b) => {
       const value = (p: WarehouseProduct) =>
-        sort === "quantity"
-          ? available(p.id)
-          : sort === "status"
-            ? statusOf(p.id)
-            : sort === "location"
-              ? stockOf(p.id)
-                  .sort((a, b) => (a.position || 0) - (b.position || 0))
-                  .map((b) => b.location)
-                  .join(" ")
-              : p[sort] || "";
+        sort === "relevance"
+          ? -(searchScores.get(p.id) || 0)
+          : sort === "quantity"
+            ? available(p.id)
+            : sort === "status"
+              ? statusOf(p.id)
+              : sort === "location"
+                ? stockOf(p.id)
+                    .sort((a, b) => (a.position || 0) - (b.position || 0))
+                    .map((b) => b.location)
+                    .join(" ")
+                : p[sort] || "";
       const av = value(a),
         bv = value(b);
       if (av === "" && bv !== "") return 1;
@@ -273,10 +297,13 @@ export default function InventoryTable({
             搜索商品
             <input
               className={input + " mt-1"}
-              placeholder="SKU / 中文 / 英文 / 展示名"
+              placeholder="SKU / 品名 / 拼音 / 首字母，如 tgy"
               value={search}
               onChange={(e) => update({ q: e.target.value })}
             />
+            <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
+              支持拼音、首字母及近似拼写，准确匹配优先。
+            </span>
           </label>
           <label className="text-sm">
             品牌

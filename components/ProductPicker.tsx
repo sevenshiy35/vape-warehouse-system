@@ -1,20 +1,21 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState } from "react";
+import { getInventoryRecord, type ProductWithInventory } from "@/lib/types";
 import {
-  getInventoryRecord,
-  type ProductWithInventory,
-} from '@/lib/types'
+  buildProductSearchIndex,
+  scoreProductSearch,
+} from "@/lib/productSearch";
 
 type Props = {
-  products: ProductWithInventory[]
-  value: string
-  onChange: (productId: string) => void
-  onProductChange?: (product: ProductWithInventory | null) => void
-  label?: string
-}
+  products: ProductWithInventory[];
+  value: string;
+  onChange: (productId: string) => void;
+  onProductChange?: (product: ProductWithInventory | null) => void;
+  label?: string;
+};
 
-const RESULT_LIMIT = 40
+const RESULT_LIMIT = 40;
 
 function getProductTitle(product: ProductWithInventory) {
   return (
@@ -22,24 +23,7 @@ function getProductTitle(product: ProductWithInventory) {
     product.product_name_cn ||
     product.product_name_en ||
     product.sku
-  )
-}
-
-function getSearchText(product: ProductWithInventory) {
-  const inv = getInventoryRecord(product)
-
-  return [
-    product.sku,
-    product.brand,
-    product.product_name_cn,
-    product.product_name_en,
-    product.display_name,
-    inv?.shelf_location,
-    String(inv?.quantity_on_hand ?? ''),
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
+  );
 }
 
 export default function ProductPicker({
@@ -47,69 +31,85 @@ export default function ProductPicker({
   value,
   onChange,
   onProductChange,
-  label = '选择商品',
+  label = "选择商品",
 }: Props) {
-  const [brandFilter, setBrandFilter] = useState('全部')
-  const [search, setSearch] = useState('')
+  const [brandFilter, setBrandFilter] = useState("全部");
+  const [search, setSearch] = useState("");
+  const searchIndexes = useMemo(
+    () =>
+      new Map(
+        products.map((product) => {
+          const inventory = getInventoryRecord(product);
+          return [
+            product.id,
+            buildProductSearchIndex(product, [
+              inventory?.shelf_location || "",
+              String(inventory?.quantity_on_hand ?? ""),
+            ]),
+          ];
+        }),
+      ),
+    [products],
+  );
 
   const selectedProduct = useMemo(
     () => products.find((product) => product.id === value) || null,
-    [products, value]
-  )
+    [products, value],
+  );
 
   const brands = useMemo(() => {
     const unique = Array.from(
-      new Set(products.map((product) => product.brand).filter(Boolean))
-    )
+      new Set(products.map((product) => product.brand).filter(Boolean)),
+    );
 
-    return ['全部', ...unique.sort()]
-  }, [products])
+    return ["全部", ...unique.sort()];
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
-    const keywords = search
-      .trim()
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(Boolean)
+    return products
+      .filter(
+        (product) => brandFilter === "全部" || product.brand === brandFilter,
+      )
+      .map((product) => ({
+        product,
+        score: scoreProductSearch(searchIndexes.get(product.id)!, search),
+      }))
+      .filter((result) => result.score > 0)
+      .sort(
+        (a, b) =>
+          b.score - a.score ||
+          a.product.sku.localeCompare(b.product.sku, undefined, {
+            numeric: true,
+          }),
+      )
+      .map((result) => result.product);
+  }, [products, brandFilter, search, searchIndexes]);
 
-    return products.filter((product) => {
-      if (brandFilter !== '全部' && product.brand !== brandFilter) {
-        return false
-      }
-
-      if (keywords.length === 0) return true
-
-      const searchableText = getSearchText(product)
-
-      return keywords.every((keyword) => searchableText.includes(keyword))
-    })
-  }, [products, brandFilter, search])
-
-  const visibleProducts = filteredProducts.slice(0, RESULT_LIMIT)
+  const visibleProducts = filteredProducts.slice(0, RESULT_LIMIT);
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500'
+    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500";
 
   function selectProduct(product: ProductWithInventory) {
-    onChange(product.id)
-    onProductChange?.(product)
+    onChange(product.id);
+    onProductChange?.(product);
   }
 
   function clearSelection() {
-    onChange('')
-    onProductChange?.(null)
+    onChange("");
+    onProductChange?.(null);
   }
 
   function handleBrandChange(nextBrand: string) {
-    setBrandFilter(nextBrand)
-    setSearch('')
+    setBrandFilter(nextBrand);
+    setSearch("");
 
     if (
       selectedProduct &&
-      nextBrand !== '全部' &&
+      nextBrand !== "全部" &&
       selectedProduct.brand !== nextBrand
     ) {
-      clearSelection()
+      clearSelection();
     }
   }
 
@@ -144,8 +144,11 @@ export default function ProductPicker({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onInput={(event) => setSearch(event.currentTarget.value)}
-            placeholder="SKU / 品名 / 英文名 / 展示名 / 库位 / 库存"
+            placeholder="SKU / 品名 / 拼音 / 首字母 / 库位"
           />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            支持拼音和首字母，例如 tgy 搜铁观音；准确匹配优先。
+          </p>
         </div>
       </div>
 
@@ -159,7 +162,7 @@ export default function ProductPicker({
             当前匹配 {filteredProducts.length} 个商品
             {filteredProducts.length > RESULT_LIMIT
               ? `，显示前 ${RESULT_LIMIT} 个`
-              : ''}
+              : ""}
           </p>
         </div>
 
@@ -175,7 +178,7 @@ export default function ProductPicker({
                   {selectedProduct.brand} | {selectedProduct.sku}
                   {selectedProduct.product_name_en
                     ? ` | ${selectedProduct.product_name_en}`
-                    : ''}
+                    : ""}
                 </p>
               </div>
 
@@ -198,11 +201,11 @@ export default function ProductPicker({
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-800">
               {visibleProducts.map((product) => {
-                const inv = getInventoryRecord(product)
-                const stock = Number(inv?.quantity_on_hand ?? 0)
-                const location = inv?.shelf_location || '无库位'
-                const selected = product.id === value
-                const lowStock = stock <= 3
+                const inv = getInventoryRecord(product);
+                const stock = Number(inv?.quantity_on_hand ?? 0);
+                const location = inv?.shelf_location || "无库位";
+                const selected = product.id === value;
+                const lowStock = stock <= 3;
 
                 return (
                   <button
@@ -211,19 +214,19 @@ export default function ProductPicker({
                     onClick={() => selectProduct(product)}
                     className={`block w-full p-3 text-left transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:hover:bg-blue-950/30 ${
                       selected
-                        ? 'bg-blue-50 dark:bg-blue-950/40'
-                        : 'bg-white dark:bg-gray-950'
+                        ? "bg-blue-50 dark:bg-blue-950/40"
+                        : "bg-white dark:bg-gray-950"
                     }`}
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                            {product.brand || '-'}
+                            {product.brand || "-"}
                           </span>
 
                           <span className="font-mono text-xs font-semibold text-gray-500 dark:text-gray-400">
-                            {product.sku || '-'}
+                            {product.sku || "-"}
                           </span>
 
                           {selected && (
@@ -238,10 +241,10 @@ export default function ProductPicker({
                         </p>
 
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                          {product.product_name_cn || '-'}
+                          {product.product_name_cn || "-"}
                           {product.product_name_en
                             ? ` / ${product.product_name_en}`
-                            : ''}
+                            : ""}
                         </p>
                       </div>
 
@@ -256,8 +259,8 @@ export default function ProductPicker({
                         <div
                           className={`rounded-lg border px-2 py-1.5 ${
                             lowStock
-                              ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-900/60 dark:bg-yellow-950/30'
-                              : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900'
+                              ? "border-yellow-200 bg-yellow-50 dark:border-yellow-900/60 dark:bg-yellow-950/30"
+                              : "border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900"
                           }`}
                         >
                           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -268,12 +271,12 @@ export default function ProductPicker({
                       </div>
                     </div>
                   </button>
-                )
+                );
               })}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }
