@@ -31,14 +31,14 @@ const quickActions = [
   {
     title: "盘点上架 / 补货",
     icon: "入",
-    description: "按库位录入散货和整盒库存",
+    description: "按库位录入商品数量",
     href: "/admin/warehouse?tab=stock_ops",
     tone: "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950",
   },
   {
     title: "添加商品",
     icon: "添",
-    description: "创建新 SKU 和单位换算规则",
+    description: "创建新 SKU 和商品资料",
     href: "/admin/products/new",
     tone: "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950",
   },
@@ -52,7 +52,7 @@ const quickActions = [
   {
     title: "作业流水",
     icon: "记",
-    description: "查看上架、拣货、拆盒与退回记录",
+    description: "查看上架、拣货和退回记录",
     href: "/admin/warehouse?tab=logs",
     tone: "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950",
   },
@@ -133,7 +133,6 @@ const logTypeLabel: Record<string, string> = {
   pick: "集中拣货",
   pack: "打包完成",
   return: "余货退回",
-  split: "拆盒转库",
 };
 
 function getOrderStatus(status: string) {

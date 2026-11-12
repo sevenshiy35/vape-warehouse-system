@@ -17,8 +17,6 @@ export default function NewProductForm({
     productNameCN: "",
     displayName: "",
     productNameEN: "",
-    boxMultiplier: 1,
-    cartonMultiplier: 1,
   });
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -70,8 +68,6 @@ export default function NewProductForm({
               setValue({
                 ...value,
                 brand: e.target.value,
-                boxMultiplier: e.target.value === "Yohuu烟弹" ? 3 : 1,
-                cartonMultiplier: e.target.value === "真烟" ? 10 : 1,
               })
             }
           />
@@ -112,36 +108,8 @@ export default function NewProductForm({
             }
           />
         </label>
-        <label>
-          订单每盒换算为多少个
-          <input
-            type="number"
-            min="1"
-            max="10000"
-            className={input}
-            required
-            value={value.boxMultiplier}
-            onChange={(e) =>
-              setValue({ ...value, boxMultiplier: Number(e.target.value) })
-            }
-          />
-        </label>
-        <label>
-          订单每条换算为多少个
-          <input
-            type="number"
-            min="1"
-            max="10000"
-            className={input}
-            required
-            value={value.cartonMultiplier}
-            onChange={(e) =>
-              setValue({ ...value, cartonMultiplier: Number(e.target.value) })
-            }
-          />
-        </label>
         <p className="text-sm text-[var(--muted)] md:col-span-2">
-          这里只创建商品资料。创建后到“盘点上架”录入散货位、整盒位及实际数量。
+          创建商品后，到“盘点上架”填写库位和实际数量。
         </p>
         <button className={getActionButtonClass("primary")} disabled={busy}>
           {busy ? "创建中…" : "创建商品"}

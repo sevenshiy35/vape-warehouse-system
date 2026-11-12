@@ -27,8 +27,6 @@ type Event = {
 type StockInput = {
   productId: string;
   location: string;
-  kind: "loose" | "box";
-  unitsPerPack: number;
   quantity: number;
   mode: "set" | "add";
   note?: string;
@@ -54,7 +52,6 @@ const actionLabels: Record<string, string> = {
   pick: "拣货",
   return: "退回",
   pack: "打包完成",
-  split: "拆盒",
   location_order: "库位顺序",
 };
 function displayRelation(value: unknown, key: string) {
@@ -95,26 +92,14 @@ export default function WarehouseClient({
   const [batchName, setBatchName] = useState("集中拣货");
   const [search, setSearch] = useState("");
   const [productId, setProductId] = useState(initialProductId);
-  const [kind, setKind] = useState<"loose" | "box">(
-    initialRecord?.kind || "loose",
-  );
   const [location, setLocation] = useState(initialRecord?.location || "");
   const [position, setPosition] = useState(
     initialRecord?.position || firstFreePosition(initialProductId),
   );
-  const [size, setSize] = useState(initialRecord?.units_per_pack || 1);
-  const [qty, setQty] = useState(
-    initialRecord
-      ? initialRecord.quantity /
-          (initialRecord.kind === "box" ? initialRecord.units_per_pack : 1)
-      : 0,
-  );
+  const [qty, setQty] = useState(initialRecord?.quantity || 0);
   const [mode, setMode] = useState<"set" | "add">("set");
   const [importRows, setImportRows] = useState<StockInput[]>([]);
   const [importError, setImportError] = useState("");
-  const [splitId, setSplitId] = useState("");
-  const [splitPacks, setSplitPacks] = useState(1);
-  const [splitLocation, setSplitLocation] = useState("");
   const [pickQty, setPickQty] = useState<Record<string, number>>({});
   const [activeOrder, setActiveOrder] = useState("");
   const [checked, setChecked] = useState<string[]>([]);
@@ -241,8 +226,6 @@ export default function WarehouseClient({
         const loc = String(row["库位"] || "")
           .trim()
           .toUpperCase();
-        const form = String(row["类型"] || "散货").trim();
-        const packSize = form === "整盒" ? Number(row["每盒数量"]) : 1;
         const count = Number(row["数量"]);
         const requestedPosition = String(row["库位序号"] || "").trim();
         if (requestedPosition && ![1, 2, 3].includes(Number(requestedPosition)))
@@ -250,28 +233,21 @@ export default function WarehouseClient({
         if (
           !p ||
           !loc ||
-          !["整盒", "散货"].includes(form) ||
-          !Number.isSafeInteger(packSize) ||
-          packSize < 1 ||
           String(row["数量"]).trim() === "" ||
           !Number.isSafeInteger(count) ||
           count < 0 ||
-          count * packSize > 10000000
+          count > 10000000
         )
-          throw new Error(
-            `第 ${index + 2} 行：请检查 SKU、库位、类型、每盒数量及数量`,
-          );
-        const key = `${p.id}/${loc}/${form}`;
+          throw new Error(`第 ${index + 2} 行：请检查 SKU、库位及数量`);
+        const key = `${p.id}/${loc}`;
         if (keys.has(key))
-          throw new Error(`第 ${index + 2} 行：同一商品的库位和类型重复`);
+          throw new Error(`第 ${index + 2} 行：同一商品的库位重复`);
         keys.add(key);
         return {
           productId: p.id,
           ...(requestedPosition ? { position: Number(requestedPosition) } : {}),
           location: loc,
-          kind: form === "整盒" ? ("box" as const) : ("loose" as const),
-          unitsPerPack: packSize,
-          quantity: count * packSize,
+          quantity: count,
           mode: "set" as const,
           note: "批量盘点上架",
         };
@@ -285,7 +261,7 @@ export default function WarehouseClient({
     if (
       !(await confirm({
         title: mode === "set" ? "确认该库位盘点数量？" : "确认补货？",
-        message: `${productName(productId)}，${location || "未填库位"}，${qty}${kind === "box" ? ` 盒 × ${size}` : ""}，合计 ${qty * (kind === "box" ? size : 1)} 个。`,
+        message: `${productName(productId)}，${location || "未填库位"}，数量 ${qty} 个。`,
         confirmText: "确认保存",
       }))
     )
@@ -294,9 +270,7 @@ export default function WarehouseClient({
       productId,
       position,
       location,
-      kind,
-      unitsPerPack: kind === "box" ? size : 1,
-      quantity: qty * (kind === "box" ? size : 1),
+      quantity: qty,
       mode,
     });
     if (result) {
@@ -519,7 +493,7 @@ export default function WarehouseClient({
             <h2 className="mb-4 text-xl font-bold">盘点上架与补货</h2>
             <p className="mb-4 text-sm text-[var(--muted)]">
               最多三个库位，按库位 1 → 2 → 3
-              出库。同一位置的整盒和散货使用同一个库位序号。盘点设定实际数量，补货在原数量上增加。
+              出库。直接填写该库位的实际数量；盘点设定数量，补货增加数量。
             </p>
             <div className="grid gap-4 md:grid-cols-3">
               <label>
@@ -541,10 +515,6 @@ export default function WarehouseClient({
                   value={productId}
                   onChange={(e) => {
                     setProductId(e.target.value);
-                    setSize(
-                      productMap.get(e.target.value)?.default_pick_multiplier ||
-                        1,
-                    );
                   }}
                 >
                   <option value="">请选择商品</option>
@@ -580,30 +550,7 @@ export default function WarehouseClient({
                 />
               </label>
               <label>
-                存放类型
-                <select
-                  className={input}
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value as "box" | "loose")}
-                >
-                  <option value="loose">散货位</option>
-                  <option value="box">整盒位</option>
-                </select>
-              </label>
-              {kind === "box" && (
-                <label>
-                  每盒包含多少个
-                  <input
-                    className={input}
-                    type="number"
-                    min="1"
-                    value={size}
-                    onChange={(e) => setSize(Number(e.target.value))}
-                  />
-                </label>
-              )}
-              <label>
-                {kind === "box" ? "盒数" : "散货数量"}
+                库存数量
                 <input
                   className={input}
                   type="number"
@@ -630,21 +577,19 @@ export default function WarehouseClient({
                   !productId ||
                   !location.trim() ||
                   !Number.isInteger(qty) ||
-                  qty < 0 ||
-                  (kind === "box" && (!Number.isInteger(size) || size < 1))
+                  qty < 0
                 }
                 onClick={submitStock}
               >
-                保存 · 共 {qty * (kind === "box" ? size : 1)} 个
+                保存 · 共 {qty} 个
               </button>
             </div>
           </Panel>
           <Panel>
             <h2 className="mb-3 text-xl font-bold">表格批量盘点</h2>
             <p className="mb-3 text-sm text-[var(--muted)]">
-              Excel / CSV
-              第一行填写：SKU、库位序号、库位、类型、每盒数量、数量。库位序号可填
-              1、2、3，留空自动分配。类型填“整盒”或“散货”；整盒的数量填盒数。确认前可预览，整批保存失败会全部回滚。
+              Excel / CSV 第一行填写：SKU、库位序号、库位、数量。库位序号可填
+              1、2、3，留空自动分配。确认前可预览，整批保存失败会全部回滚。
             </p>
             <input
               aria-label="上传盘点表格"
@@ -670,11 +615,8 @@ export default function WarehouseClient({
                 <div className="my-4 max-h-72 overflow-auto rounded-xl border p-3">
                   {importRows.map((r, i) => (
                     <p key={i} className="py-1 text-sm">
-                      {productName(r.productId)} · {r.location} ·{" "}
-                      {r.kind === "box"
-                        ? `${r.quantity / r.unitsPerPack} 盒 × ${r.unitsPerPack}`
-                        : "散货"}{" "}
-                      · 共 {r.quantity} 个
+                      {productName(r.productId)} · {r.location} · · 共{" "}
+                      {r.quantity} 个
                     </p>
                   ))}
                 </div>
@@ -705,96 +647,6 @@ export default function WarehouseClient({
               </>
             )}
           </Panel>
-          {
-            <Panel>
-              <h2 className="mb-3 text-xl font-bold">拆盒补充散货</h2>
-              <label>
-                源整盒库位
-                <select
-                  className={input + " mt-2 mb-4"}
-                  value={splitId}
-                  onChange={(e) => {
-                    setSplitId(e.target.value);
-                    setSplitLocation(
-                      bins.find((b) => b.id === e.target.value)?.location || "",
-                    );
-                    setSplitPacks(1);
-                  }}
-                >
-                  <option value="">请选择整盒库位</option>
-                  {bins
-                    .filter((b) => b.kind === "box" && b.quantity > b.reserved)
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {productName(b.product_id)} · 库位 {b.position}{" "}
-                        {b.location}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <p className="mb-3">
-                {splitId
-                  ? productName(
-                      bins.find((b) => b.id === splitId)?.product_id || "",
-                    )
-                  : "同一库位的整盒和散货共用库位序号。"}
-              </p>
-              <div className="grid items-end gap-3 md:grid-cols-3">
-                <label>
-                  拆几盒
-                  <input
-                    className={input}
-                    type="number"
-                    min="1"
-                    value={splitPacks}
-                    onChange={(e) => setSplitPacks(Number(e.target.value))}
-                  />
-                </label>
-                <label>
-                  目标散货库位
-                  <input
-                    className={input}
-                    value={splitLocation}
-                    onChange={(e) => setSplitLocation(e.target.value)}
-                  />
-                </label>
-                <button
-                  className={getActionButtonClass("primary")}
-                  disabled={disabled || !splitId || !splitLocation.trim()}
-                  onClick={async () => {
-                    if (
-                      await confirm({
-                        title: "确认实际拆盒并转入散货位？",
-                        message: `拆 ${splitPacks} 盒，散货放到 ${splitLocation}。操作会同步记录两个库位的数量变化。`,
-                        confirmText: "确认拆盒",
-                      })
-                    ) {
-                      if (
-                        await command(
-                          "split_box",
-                          {
-                            binId: splitId,
-                            packs: splitPacks,
-                            location: splitLocation,
-                          },
-                          "拆盒已记录",
-                        )
-                      )
-                        setSplitId("");
-                    }
-                  }}
-                >
-                  确认拆盒
-                </button>
-                <button
-                  className={getActionButtonClass()}
-                  onClick={() => setSplitId("")}
-                >
-                  清空选择
-                </button>
-              </div>
-            </Panel>
-          }
         </>
       )}
       {tab === "batches" && (
@@ -847,7 +699,7 @@ export default function WarehouseClient({
                         await confirm({
                           title: "退回余货并结束这个批次？",
                           message:
-                            "已完成订单保留。未使用的已拣商品会退回原库位，零散余货按散货退回；未完成订单恢复待拣货。请先把实物放回后确认。",
+                            "已完成订单保留。未使用的已拣商品会按数量退回原库位；未完成订单恢复待拣货。请先把实物放回后确认。",
                           confirmText: "确认退回并结束",
                           tone: "danger",
                         })
@@ -874,11 +726,6 @@ export default function WarehouseClient({
                         库位 {l.position}
                       </p>
                       <p className="text-3xl font-bold">{l.location}</p>
-                      <p className="text-sm text-[var(--muted)]">
-                        {l.kind === "box"
-                          ? `整盒 · ${l.units_per_pack} 个/盒`
-                          : "散货位"}
-                      </p>
                     </div>
                     <div className="min-w-40 flex-1">
                       <p className="font-semibold">
@@ -887,9 +734,6 @@ export default function WarehouseClient({
                       <p className="mt-1">
                         应拣 <strong className="text-2xl">{l.requested}</strong>{" "}
                         个
-                        {l.kind === "box"
-                          ? `（${l.requested / l.units_per_pack} 盒）`
-                          : ""}
                       </p>
                       {l.confirmed && (
                         <p
@@ -916,7 +760,7 @@ export default function WarehouseClient({
                             type="number"
                             min="0"
                             max={l.requested}
-                            step={l.kind === "box" ? l.units_per_pack : 1}
+                            step={1}
                             value={pickQty[l.id] ?? l.requested}
                             onChange={(e) =>
                               setPickQty({

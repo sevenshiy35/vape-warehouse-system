@@ -13,8 +13,6 @@ export type WarehouseBin = {
   product_id: string;
   location: string;
   position: number | null;
-  kind: "loose" | "box";
-  units_per_pack: number;
   quantity: number;
   reserved: number;
 };
@@ -57,8 +55,6 @@ export type WarehouseLine = {
   product_id: string;
   location: string;
   position: number;
-  kind: string;
-  units_per_pack: number;
   requested: number;
   picked: number;
   confirmed: boolean;

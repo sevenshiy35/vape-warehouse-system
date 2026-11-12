@@ -16,20 +16,24 @@ export async function POST(request: Request) {
         productNameCN: z.string().trim().min(1).max(200),
         displayName: z.string().trim().max(200),
         productNameEN: z.string().trim().max(200),
-        boxMultiplier: z.number().int().min(1).max(10000),
-        cartonMultiplier: z.number().int().min(1).max(10000),
       })
       .parse(await request.json());
     const { data, error } = await supabaseAdmin.rpc(
       "warehouse_create_product",
-      { p_payload: payload },
+      {
+        p_payload: {
+          ...payload,
+          boxMultiplier: payload.brand === "Yohuu烟弹" ? 3 : 1,
+          cartonMultiplier: payload.brand === "真烟" ? 10 : 1,
+        },
+      },
     );
     if (error)
       return NextResponse.json({ error: error.message }, { status: 409 });
     return NextResponse.json({ success: true, productId: data });
   } catch {
     return NextResponse.json(
-      { error: "请检查商品名称、品牌及换算数量" },
+      { error: "请检查商品名称及品牌" },
       { status: 400 },
     );
   }

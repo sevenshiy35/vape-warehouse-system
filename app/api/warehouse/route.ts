@@ -9,8 +9,6 @@ const integer = z.number().int().min(0).max(10000000);
 const stock = z.object({
   productId: uuid,
   location: z.string().trim().min(1).max(60),
-  kind: z.enum(["loose", "box"]),
-  unitsPerPack: integer.min(1),
   quantity: integer,
   mode: z.enum(["set", "add"]),
   position: z.number().int().min(1).max(3).optional(),
@@ -38,11 +36,6 @@ const schemas = {
   pack: z.object({
     orderId: uuid,
     checkedItemIds: z.array(uuid).min(1).max(1000),
-  }),
-  split_box: z.object({
-    binId: uuid,
-    packs: integer.min(1),
-    location: z.string().trim().min(1).max(60),
   }),
 };
 export async function POST(request: Request) {

@@ -42,7 +42,7 @@ export default async function NewProductPage() {
     <PageShell maxWidth="max-w-5xl">
       <PageHeader
         title="添加商品"
-        description="创建商品资料和订单单位换算规则，再按实际库存分库位上架。"
+        description="创建商品资料，再按实际数量分库位上架。"
         actions={
           <>
             <NavButton href="/admin/inventory">库存列表</NavButton>
