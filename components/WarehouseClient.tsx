@@ -90,7 +90,11 @@ export default function WarehouseClient({
   const [allDates, setAllDates] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [batchName, setBatchName] = useState("集中拣货");
-  const [search, setSearch] = useState("");
+  const [brandFilter, setBrandFilter] = useState(() =>
+    initialBin || initialProduct
+      ? products.find((p) => p.id === initialProductId)?.brand?.trim() || "全部"
+      : "全部",
+  );
   const [productId, setProductId] = useState(initialProductId);
   const [location, setLocation] = useState(initialRecord?.location || "");
   const [position, setPosition] = useState(
@@ -143,11 +147,11 @@ export default function WarehouseClient({
   const selectedReady = selected.filter((id) =>
     readyOrders.some((o) => o.id === id),
   );
-  const filteredProducts = products.filter((p) =>
-    [p.sku, p.brand, p.product_name_cn, p.display_name]
-      .join(" ")
-      .toLowerCase()
-      .includes(search.toLowerCase()),
+  const brandOptions = Array.from(
+    new Set(products.map((p) => (p.brand || "").trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b, "zh-Hans", { numeric: true }));
+  const filteredProducts = products.filter(
+    (p) => brandFilter === "全部" || (p.brand || "").trim() === brandFilter,
   );
   const productName = (id: string) => {
     const p = productMap.get(id);
@@ -497,16 +501,25 @@ export default function WarehouseClient({
             </p>
             <div className="grid gap-4 md:grid-cols-3">
               <label>
-                搜索商品
-                <input
+                品牌筛选
+                <select
                   className={input}
-                  value={search}
-                  placeholder="SKU、品牌或名称"
+                  value={brandFilter}
                   onChange={(e) => {
-                    setSearch(e.target.value);
+                    setBrandFilter(e.target.value);
                     setProductId("");
+                    setLocation("");
+                    setQty(0);
+                    setPosition(1);
                   }}
-                />
+                >
+                  <option value="全部">全部品牌</option>
+                  {brandOptions.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="md:col-span-2">
                 商品
@@ -515,6 +528,9 @@ export default function WarehouseClient({
                   value={productId}
                   onChange={(e) => {
                     setProductId(e.target.value);
+                    setPosition(firstFreePosition(e.target.value));
+                    setLocation("");
+                    setQty(0);
                   }}
                 >
                   <option value="">请选择商品</option>
