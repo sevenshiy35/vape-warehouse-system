@@ -1,6 +1,6 @@
 # 仓库拣货作业台 v2
 
-在原仓库项目和 Supabase 数据库上改版。日常入口为 `/admin/warehouse`。
+在原仓库项目和 Supabase 数据库上改版。首页 `/` 保留原作业概览和入口，日常作业区为 `/admin/warehouse`。
 
 ## 日常操作
 

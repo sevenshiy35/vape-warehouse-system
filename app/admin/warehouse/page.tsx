@@ -63,6 +63,7 @@ export default async function WarehousePage({
         description="截图录单 · 集中拣货 · 按单分货打包"
         actions={
           <>
+            <NavButton href="/">首页</NavButton>
             <NavButton href="/admin/upload" variant="primary">
               上传订单截图
             </NavButton>
