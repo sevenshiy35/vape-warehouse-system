@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "电子烟仓库管理系统",
-  description: "订单、库存、拣货和仓库流水管理",
+  title: "仓库拣货作业台",
+  description: "截图录单、多库位库存、集中拣货与按单分货打包",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

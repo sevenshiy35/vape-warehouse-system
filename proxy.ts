@@ -8,7 +8,7 @@ export function proxy(req: NextRequest) {
   const isAdminPage = pathname.startsWith("/admin");
   const isApiRoute = pathname.startsWith("/api");
   const isPublicApi = PUBLIC_API_PATHS.some((path) =>
-    pathname.startsWith(path)
+    pathname.startsWith(path),
   );
 
   if (!isAdminPage && !isApiRoute) {
@@ -26,14 +26,20 @@ export function proxy(req: NextRequest) {
     sessionSecret && authCookie && authCookie === sessionSecret;
 
   if (isLoggedIn) {
+    const origin = req.headers.get("origin");
+    if (
+      isApiRoute &&
+      !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+      origin &&
+      origin !== req.nextUrl.origin
+    ) {
+      return NextResponse.json({ error: "请求来源不正确" }, { status: 403 });
+    }
     return NextResponse.next();
   }
 
   if (isApiRoute) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const loginUrl = new URL("/login", req.url);

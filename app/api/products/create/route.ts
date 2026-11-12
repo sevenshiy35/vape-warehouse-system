@@ -1,142 +1,36 @@
-import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { getErrorMessage } from '@/lib/errors'
-
-export const runtime = 'nodejs'
-
-const DEFAULT_OPERATOR = 'Seven'
-const YOHUU_POD_BRAND = 'Yohuu烟弹'
-const TOBACCO_BRAND = '真烟'
-
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isWarehouseAdmin } from "@/lib/warehouseAuth";
 export async function POST(request: Request) {
+  if (!(await isWarehouseAdmin()))
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin)
+    return NextResponse.json({ error: "请求来源不正确" }, { status: 403 });
   try {
-    const body = await request.json()
-
-    const sku = String(body.sku || '').trim()
-    const brand = String(body.brand || '').trim()
-    const productNameCN = String(body.productNameCN || '').trim()
-    const displayName = String(body.displayName || '').trim()
-    const productNameEN = String(body.productNameEN || '').trim()
-    const shelfLocation = String(body.shelfLocation || '').trim()
-    const operator = String(body.operator || DEFAULT_OPERATOR).trim()
-
-    const initialQty = Number(body.initialQty || 0)
-    const lowStockThreshold = Number(body.lowStockThreshold || 3)
-
-    if (!brand) {
-      return NextResponse.json(
-        { error: 'Missing brand' },
-        { status: 400 }
-      )
-    }
-
-    if (!productNameCN) {
-      return NextResponse.json(
-        { error: 'Missing Chinese product name' },
-        { status: 400 }
-      )
-    }
-
-    if (!Number.isInteger(initialQty) || initialQty < 0) {
-      return NextResponse.json(
-        { error: 'Initial quantity must be 0 or greater' },
-        { status: 400 }
-      )
-    }
-
-    if (initialQty > 0 && !shelfLocation) {
-      return NextResponse.json(
-        { error: 'Shelf location is required when initial quantity is greater than 0' },
-        { status: 400 }
-      )
-    }
-
-    if (!Number.isInteger(lowStockThreshold) || lowStockThreshold < 0) {
-      return NextResponse.json(
-        { error: 'Low stock threshold must be 0 or greater' },
-        { status: 400 }
-      )
-    }
-
-    const { data: productId, error } = await supabaseAdmin.rpc(
-      'create_product_with_inventory',
-      {
-        p_sku: sku || null,
-        p_brand: brand,
-        p_product_name_cn: productNameCN,
-        p_display_name: displayName || null,
-        p_product_name_en: productNameEN || null,
-        p_initial_qty: initialQty,
-        p_shelf_location: shelfLocation || null,
-        p_low_stock_threshold: lowStockThreshold,
-        p_operator: operator || DEFAULT_OPERATOR,
-      }
-    )
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
-    }
-
-    const multiplierUpdate =
-      brand === YOHUU_POD_BRAND
-        ? { default_pick_multiplier: 3 }
-        : brand === TOBACCO_BRAND
-          ? { carton_pick_multiplier: 10 }
-          : null
-
-    if (multiplierUpdate) {
-      const { error: multiplierError } = await supabaseAdmin
-        .from('products')
-        .update({
-          ...multiplierUpdate,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', productId)
-
-      if (multiplierError) {
-        return NextResponse.json(
-          { error: multiplierError.message },
-          { status: 400 }
-        )
-      }
-    }
-
-    const { data: product, error: productError } = await supabaseAdmin
-      .from('products')
-      .select(`
-        id,
-        sku,
-        brand,
-        product_name_cn,
-        display_name,
-        product_name_en,
-        inventory (
-          shelf_location,
-          quantity_on_hand,
-          low_stock_threshold
-        )
-      `)
-      .eq('id', productId)
-      .single()
-
-    if (productError) {
-      return NextResponse.json({
-        success: true,
-        productId,
+    const payload = z
+      .object({
+        sku: z.string().trim().max(60),
+        brand: z.string().trim().min(1).max(100),
+        productNameCN: z.string().trim().min(1).max(200),
+        displayName: z.string().trim().max(200),
+        productNameEN: z.string().trim().max(200),
+        boxMultiplier: z.number().int().min(1).max(10000),
+        cartonMultiplier: z.number().int().min(1).max(10000),
       })
-    }
-
-    return NextResponse.json({
-      success: true,
-      product,
-    })
-  } catch (error: unknown) {
+      .parse(await request.json());
+    const { data, error } = await supabaseAdmin.rpc(
+      "warehouse_create_product",
+      { p_payload: payload },
+    );
+    if (error)
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    return NextResponse.json({ success: true, productId: data });
+  } catch {
     return NextResponse.json(
-      { error: getErrorMessage(error, 'Unexpected error') },
-      { status: 500 }
-    )
+      { error: "请检查商品名称、品牌及换算数量" },
+      { status: 400 },
+    );
   }
 }

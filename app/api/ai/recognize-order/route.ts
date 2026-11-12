@@ -4,10 +4,12 @@ import {
   recognizeOrder,
 } from '@/lib/orderRecognition'
 import { getErrorMessage } from '@/lib/errors'
+import { isWarehouseAdmin } from '@/lib/warehouseAuth'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
+  if (!(await isWarehouseAdmin())) return NextResponse.json({ error: '请先登录' }, { status: 401 })
   try {
     const body = await request.json()
     const orderId = body.orderId as string

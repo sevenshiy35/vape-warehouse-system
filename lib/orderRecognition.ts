@@ -123,6 +123,8 @@ export class OrderRecognitionError extends Error {
 }
 
 const blockedRecognitionStatuses = new Set([
+  'confirmed',
+  'packing',
   'picking',
   'completed',
   'cancelled',
@@ -500,6 +502,7 @@ export async function recognizeOrder(
   options: {
     force?: boolean
     ignoreAiStatus?: boolean
+    deferCompletion?: boolean
   } = {}
 ) {
   if (!orderId) {
@@ -667,7 +670,7 @@ Rules:
   }
 
   await updateOrderAiResult(orderId, result, {
-    aiStatus: 'completed',
+    aiStatus: options.deferCompletion ? 'processing' : 'completed',
     aiError: null,
     aiProcessedAt: new Date().toISOString(),
   })
@@ -728,11 +731,9 @@ export async function autoAddMatchedOrderItems(
           ? UNIT_PIECE
           : item.unit
 
-    const { error } = await supabaseAdmin.rpc('add_order_item_safe', {
-      p_order_id: orderId,
-      p_product_id: item.productId,
-      p_qty: item.quantity,
-      p_unit: unit,
+    const { error } = await supabaseAdmin.rpc('warehouse_edit_item', {
+      p_action: 'add',
+      p_payload: { orderId, productId: item.productId, qty: item.quantity, unit },
     })
 
     if (error) {
@@ -788,6 +789,7 @@ export async function recognizeAndAutoAddOrder(orderId: string) {
   try {
     const recognition = await recognizeOrder(orderId, {
       ignoreAiStatus: true,
+      deferCompletion: true,
     })
     lastRecognitionResult = recognition.result
 

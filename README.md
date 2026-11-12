@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 仓库拣货作业台 v2
 
-## Getting Started
+在原仓库项目和 Supabase 数据库上改版。日常入口为 `/admin/warehouse`。
 
-First, run the development server:
+## 日常操作
+
+1. **盘点上架**：同一商品可建立多个散货位、整盒位。整盒填写每盒数量和盒数；所有库存以最小单位记账。盘点覆盖指定库位数量，补货增加数量。表格导入先预览，整批事务提交。
+2. **截图录单**：每张订单卡片对应一单，同一单的多页截图放在同一卡片。上传后后台识别，人工对照原图检查遗漏、数量及盒／条换算，再确认待拣货。相同截图组合禁止重复录入。
+3. **集中拣货**：选择待拣货订单生成批次。系统先取完整盒，再取散货，按库位排序。需要拆盒时，在库存页实际拆盒并转入散货位，再生成批次。生成批次会占用库存、锁定商品明细。
+4. **分货打包**：逐库位确认实拣，全部确认后进入打包。按单勾选商品核对，足量才允许完成。打包不重复扣货架库存。
+5. **异常处理**：实拣不足可先完成其他足量订单。退回余货并结束批次后，未完成订单回到待拣货；未使用的货退回原库位，拆散余货按散货记录。库存差异需要重新盘点对应库位。
+
+## 数据与库存规则
+
+- `inventory_bins` 是库位实物数量和占用量的来源；整盒位数量保持包装规格的整数倍。
+- `inventory` 是供原商品选择器和截图匹配读取的可用库存汇总，由库位触发器维护，不能独立修改。
+- `pick_batches`、`batch_orders` 和 `batch_lines` 保存批次、订单归属和各库位拣货快照。
+- `order_items.packed_qty` 记录订单已分货数量；待分货量 = 实拣 − 退回 − 已分货。
+- `warehouse_events` 统一记录盘点、补货、拆盒、拣货、退回和打包。
+- 仓库命令由服务端调用 `warehouse_command`，每次操作在同一数据库事务内完成。重复提交的拣货、打包和批次请求不会重复扣库。
+- 所有业务表启用 RLS，拒绝匿名和普通客户端角色访问。使用原管理员登录，服务端验证会话后通过 service role 操作，密钥不进入浏览器。
+
+## 2026-11-12 切换
+
+原 208 个商品及品牌、单位换算资料保留。经用户确认，旧订单、明细及截图已备份后删除，库存和库位清零。旧逐单扣库函数、旧库存流水表、空的商品别名表和重复字段已退役。
+
+数据库变更保存在 `supabase/migrations/`，这些迁移针对原有数据库执行，包含一次性清理检查，不能对已有新业务数据重复执行清理。清理前本地备份存放于被 Git 忽略的 `backups/`，包括数据、函数、约束、字段及全部旧截图；不要提交这些文件。
+
+## 开发、验证与上线
+
+沿用 `.env.local` 中原 Supabase、OpenAI 和管理员环境变量。生产环境沿用原 Vercel 配置与 GitHub 主分支自动部署。
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`tests/warehouse.sql` 可在测试连接执行，覆盖混合库位、占用、重复提交、缺货回滚、打包、退回、取消和批量盘点原子性。所有测试数据均在事务中回滚。

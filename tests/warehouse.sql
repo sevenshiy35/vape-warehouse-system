@@ -1,0 +1,87 @@
+begin;
+do $$
+declare
+ p uuid; a uuid; b uuid; c uuid; d uuid; ba uuid; bb uuid; req uuid=gen_random_uuid(); line record; ids jsonb; n integer; caught boolean;
+begin
+ p=public.warehouse_create_product(jsonb_build_object('sku','QA-'||gen_random_uuid(),'brand','SP','productNameCN','仓库事务测试','boxMultiplier',10,'cartonMultiplier',100));
+ insert into public.orders(order_no,status,ai_status) values('QA-'||gen_random_uuid(),'uploaded','processing') returning id into a;
+ perform public.warehouse_edit_item('add',jsonb_build_object('orderId',a,'productId',p,'qty',2,'unit','盒'));
+ if (select sum(pick_qty) from public.order_items where order_id=a)<>20 then raise exception 'QA: box conversion incorrect'; end if;
+ caught=false;
+ begin perform public.warehouse_command('ready',jsonb_build_object('orderId',a)); exception when others then caught=true; end;
+ if not caught then raise exception 'QA: AI processing order became ready'; end if;
+ perform public.warehouse_edit_item('update',jsonb_build_object('itemId',(select id from public.order_items where order_id=a),'qty',1,'unit','条'));
+ if (select sum(pick_qty) from public.order_items where order_id=a)<>100 then raise exception 'QA: carton conversion incorrect'; end if;
+ perform public.warehouse_edit_item('delete',jsonb_build_object('itemId',(select id from public.order_items where order_id=a)));
+ delete from public.orders where id=a;
+ perform public.warehouse_command('stock',jsonb_build_object('productId',p,'location','QA-LOOSE','kind','loose','unitsPerPack',1,'quantity',7,'mode','set'));
+ perform public.warehouse_command('stock',jsonb_build_object('productId',p,'location','QA-BOX','kind','box','unitsPerPack',10,'quantity',30,'mode','set'));
+ insert into public.orders(order_no,status,ai_status) values('QA-'||gen_random_uuid(),'uploaded','completed') returning id into a;
+ insert into public.orders(order_no,status,ai_status) values('QA-'||gen_random_uuid(),'uploaded','completed') returning id into b;
+ perform public.warehouse_edit_item('add',jsonb_build_object('orderId',a,'productId',p,'qty',5,'unit','个'));
+ perform public.warehouse_edit_item('add',jsonb_build_object('orderId',b,'productId',p,'qty',12,'unit','个'));
+ perform public.warehouse_command('ready',jsonb_build_object('orderId',a));
+ perform public.warehouse_command('ready',jsonb_build_object('orderId',a));
+ perform public.warehouse_command('ready',jsonb_build_object('orderId',b));
+ caught=false;
+ begin perform public.warehouse_edit_item('add',jsonb_build_object('orderId',a,'productId',p,'qty',1,'unit','个')); exception when others then caught=true; end;
+ if not caught then raise exception 'QA: ready orders editable'; end if;
+ ba=(public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(a,b),'requestId',req,'name','QA','date',current_date))->>'id')::uuid;
+ if ba<>(public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(a,b),'requestId',req,'name','QA','date',current_date))->>'id')::uuid then raise exception 'QA: create not idempotent'; end if;
+ if (select sum(reserved) from public.inventory_bins where product_id=p)<>17 then raise exception 'QA: reservations incorrect'; end if;
+ caught=false;
+ begin perform public.warehouse_command('stock',jsonb_build_object('productId',p,'location','QA-BOX','kind','box','unitsPerPack',10,'quantity',0,'mode','set')); exception when others then caught=true; end;
+ if not caught then raise exception 'QA: overwrote reserved stock'; end if;
+ for line in select * from public.batch_lines where batch_id=ba loop
+  perform public.warehouse_command('pick',jsonb_build_object('lineId',line.id,'quantity',line.requested));
+  perform public.warehouse_command('pick',jsonb_build_object('lineId',line.id,'quantity',line.requested));
+ end loop;
+ if (select sum(quantity) from public.inventory_bins where product_id=p)<>20 then raise exception 'QA: duplicate pick deducted twice'; end if;
+ perform public.warehouse_command('start_packing',jsonb_build_object('batchId',ba));
+ select jsonb_agg(id) into ids from public.order_items where order_id=a;
+ caught=false;
+ begin perform public.warehouse_command('pack',jsonb_build_object('orderId',a,'checkedItemIds',jsonb_build_array(gen_random_uuid()))); exception when others then caught=true; end;
+ if not caught then raise exception 'QA: unchecked items accepted'; end if;
+ perform public.warehouse_command('pack',jsonb_build_object('orderId',a,'checkedItemIds',ids));
+ perform public.warehouse_command('pack',jsonb_build_object('orderId',a,'checkedItemIds',ids));
+ select jsonb_agg(id) into ids from public.order_items where order_id=b;
+ perform public.warehouse_command('pack',jsonb_build_object('orderId',b,'checkedItemIds',ids));
+ if (select status from public.pick_batches where id=ba)<>'completed' or (select sum(quantity) from public.inventory_bins where product_id=p)<>20 then raise exception 'QA: packing deducted shelves'; end if;
+ insert into public.orders(order_no,status,ai_status) values('QA-'||gen_random_uuid(),'uploaded','completed') returning id into c;
+ insert into public.orders(order_no,status,ai_status) values('QA-'||gen_random_uuid(),'uploaded','completed') returning id into d;
+ perform public.warehouse_edit_item('add',jsonb_build_object('orderId',c,'productId',p,'qty',7,'unit','个'));
+ perform public.warehouse_edit_item('add',jsonb_build_object('orderId',d,'productId',p,'qty',8,'unit','个'));
+ perform public.warehouse_command('ready',jsonb_build_object('orderId',c));
+ perform public.warehouse_command('ready',jsonb_build_object('orderId',d));
+ caught=false;
+ begin perform public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(c,d),'requestId',gen_random_uuid(),'name','QA','date',current_date)); exception when others then caught=true; end;
+ if not caught or (select sum(reserved) from public.inventory_bins where product_id=p)<>0 then raise exception 'QA: shortage did not roll back'; end if;
+ perform public.warehouse_command('split_box',jsonb_build_object('binId',(select id from public.inventory_bins where product_id=p and kind='box'),'packs',1,'location','QA-LOOSE'));
+ bb=(public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(c,d),'requestId',gen_random_uuid(),'name','QA-short','date',current_date))->>'id')::uuid;
+ for line in select * from public.batch_lines where batch_id=bb loop
+  perform public.warehouse_command('pick',jsonb_build_object('lineId',line.id,'quantity',case when line.kind='box' then line.requested else 0 end));
+ end loop;
+ perform public.warehouse_command('start_packing',jsonb_build_object('batchId',bb));
+ select jsonb_agg(id) into ids from public.order_items where order_id=c;
+ perform public.warehouse_command('pack',jsonb_build_object('orderId',c,'checkedItemIds',ids));
+ select jsonb_agg(id) into ids from public.order_items where order_id=d;
+ caught=false;
+ begin perform public.warehouse_command('pack',jsonb_build_object('orderId',d,'checkedItemIds',ids)); exception when others then caught=true; end;
+ if not caught then raise exception 'QA: allowed packing shortage'; end if;
+ perform public.warehouse_command('close_batch',jsonb_build_object('batchId',bb));
+ perform public.warehouse_command('close_batch',jsonb_build_object('batchId',bb));
+ if (select sum(quantity) from public.inventory_bins where product_id=p)<>13 or (select sum(reserved) from public.inventory_bins where product_id=p)<>0 then raise exception 'QA: return failed conservation'; end if;
+ if (select status from public.orders where id=d)<>'confirmed' or (select batch_id from public.orders where id=d) is not null then raise exception 'QA: unfinished order not released'; end if;
+ bb=(public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(d),'requestId',gen_random_uuid(),'name','QA-unpicked','date',current_date))->>'id')::uuid;
+ perform public.warehouse_command('close_batch',jsonb_build_object('batchId',bb));
+ if (select sum(reserved) from public.inventory_bins where product_id=p)<>0 then raise exception 'QA: unpicked cancellation leaked reservations'; end if;
+ caught=false;
+ begin perform public.warehouse_command('import_stock',jsonb_build_object('rows',jsonb_build_array(
+ jsonb_build_object('productId',p,'location','QA-IMPORT','kind','loose','unitsPerPack',1,'quantity',10,'mode','set'),
+ jsonb_build_object('productId',p,'location','QA-BAD','kind','loose','unitsPerPack',1,'quantity',-1,'mode','set'))));
+ exception when others then caught=true; end;
+ if not caught or exists(select 1 from public.inventory_bins where product_id=p and location='QA-IMPORT') then raise exception 'QA: import not atomic'; end if;
+ if (select quantity_on_hand from public.inventory where product_id=p)<>(select sum(quantity-reserved) from public.inventory_bins where product_id=p) then raise exception 'QA: legacy aggregate drift'; end if;
+end $$;
+rollback;
+select 'PASS: mixed bins, unit conversion, reservations, idempotency, shortage rollback, pick, pack, return, cancellation and atomic import' as result;

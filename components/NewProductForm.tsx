@@ -1,259 +1,152 @@
-'use client'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useFeedback } from '@/components/FeedbackProvider'
-
-type Props = {
-  brandOptions?: string[]
-}
-
-const DEFAULT_INITIAL_QTY = 10
-const DEFAULT_OPERATOR = 'Seven'
-
-export default function NewProductForm({ brandOptions = [] }: Props) {
-  const router = useRouter()
-  const { confirm, notify } = useFeedback()
-
-  const [sku, setSku] = useState('')
-  const [brand, setBrand] = useState('')
-  const [productNameCN, setProductNameCN] = useState('')
-  const [displayName, setDisplayName] = useState('')
-  const [productNameEN, setProductNameEN] = useState('')
-  const [initialQty, setInitialQty] = useState(DEFAULT_INITIAL_QTY)
-  const [shelfLocation, setShelfLocation] = useState('')
-  const [lowStockThreshold, setLowStockThreshold] = useState(3)
-  const [operator, setOperator] = useState(DEFAULT_OPERATOR)
-  const [loading, setLoading] = useState(false)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (!brand.trim()) {
-      notify({ type: 'warning', title: '请选择或输入品牌' })
-      return
-    }
-
-    if (!productNameCN.trim()) {
-      notify({ type: 'warning', title: '请输入中文库存品名' })
-      return
-    }
-
-    if (!Number.isInteger(initialQty) || initialQty < 0) {
-      notify({ type: 'warning', title: '初始库存必须是 0 或更大的整数' })
-      return
-    }
-
-    if (initialQty > 0 && !shelfLocation.trim()) {
-      notify({ type: 'warning', title: '初始库存大于 0 时，必须填写库位' })
-      return
-    }
-
-    const ok = await confirm({
-      title: '确认添加新品？',
-      message: `SKU：${sku.trim() || '系统自动生成'}\n品牌：${brand}\n中文名：${productNameCN}\n初始库存：${initialQty}`,
-      confirmText: '添加新品',
-      tone: 'success',
-    })
-
-    if (!ok) return
-
-    setLoading(true)
-
-    const res = await fetch('/api/products/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sku,
-        brand,
-        productNameCN,
-        displayName,
-        productNameEN,
-        initialQty,
-        shelfLocation,
-        lowStockThreshold,
-        operator,
-      }),
-    })
-
-    const data = await res.json()
-    setLoading(false)
-
-    if (!res.ok) {
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useFeedback } from "./FeedbackProvider";
+import { getActionButtonClass, Panel } from "./PageChrome";
+export default function NewProductForm({
+  brandOptions = [],
+}: {
+  brandOptions?: string[];
+}) {
+  const router = useRouter(),
+    { notify } = useFeedback();
+  const [busy, setBusy] = useState(false);
+  const [value, setValue] = useState({
+    sku: "",
+    brand: "",
+    productNameCN: "",
+    displayName: "",
+    productNameEN: "",
+    boxMultiplier: 1,
+    cartonMultiplier: 1,
+  });
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const r = await fetch("/api/products/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(value),
+      });
+      const x = await r.json();
+      if (!r.ok) throw new Error(x.error);
       notify({
-        type: 'error',
-        title: '添加新品失败',
-        message: data.error,
-      })
-      return
+        type: "success",
+        title: "商品已创建，请到盘点上架录入各库位数量",
+      });
+      router.push("/admin/warehouse?tab=stock");
+    } catch (e) {
+      notify({
+        type: "error",
+        title: "创建失败",
+        message: e instanceof Error ? e.message : "请重试",
+      });
+    } finally {
+      setBusy(false);
     }
-
-    notify({ type: 'success', title: '新品添加成功' })
-
-    setSku('')
-    setBrand('')
-    setProductNameCN('')
-    setDisplayName('')
-    setProductNameEN('')
-    setInitialQty(DEFAULT_INITIAL_QTY)
-    setShelfLocation('')
-    setLowStockThreshold(3)
-
-    router.refresh()
   }
-
+  const input =
+    "mt-1 min-h-11 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-2";
   return (
-    <form
-  onSubmit={handleSubmit}
-  className="space-y-5 rounded-lg border border-gray-200 bg-white p-5 text-gray-900 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100"
->
-      <h2 className="text-lg font-semibold">添加新品库存</h2>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            SKU，可选
-          </label>
+    <Panel>
+      <form onSubmit={save} className="grid gap-4 md:grid-cols-2">
+        <label>
+          SKU（留空自动生成）
           <input
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            placeholder="不填则自动生成，例如 SP 最大为 SP-33 时生成 SP-34"
+            className={input}
+            value={value.sku}
+            onChange={(e) => setValue({ ...value, sku: e.target.value })}
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            品牌 <span className="text-red-500">*</span>
-          </label>
+        </label>
+        <label>
+          品牌
           <input
-            list="brand-options"
-            className="w-full rounded border px-3 py-2"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            placeholder="选择或输入品牌"
+            className={input}
+            required
+            list="brands"
+            value={value.brand}
+            onChange={(e) =>
+              setValue({
+                ...value,
+                brand: e.target.value,
+                boxMultiplier: e.target.value === "Yohuu烟弹" ? 3 : 1,
+                cartonMultiplier: e.target.value === "真烟" ? 10 : 1,
+              })
+            }
           />
-
-          <datalist id="brand-options">
-            {brandOptions.map((item) => (
-              <option key={item} value={item} />
+          <datalist id="brands">
+            {brandOptions.map((b) => (
+              <option value={b} key={b} />
             ))}
           </datalist>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            中文库存品名 <span className="text-red-500">*</span>
-          </label>
+        </label>
+        <label>
+          中文品名
           <input
-            className="w-full rounded border px-3 py-2"
-            value={productNameCN}
-            onChange={(e) => setProductNameCN(e.target.value)}
-            placeholder="例如 椰子水 / 青提"
+            className={input}
+            required
+            value={value.productNameCN}
+            onChange={(e) =>
+              setValue({ ...value, productNameCN: e.target.value })
+            }
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            展示品名，可选
-          </label>
+        </label>
+        <label>
+          显示名称
           <input
-            className="w-full rounded border px-3 py-2"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="例如 SP 椰子水"
+            className={input}
+            value={value.displayName}
+            onChange={(e) =>
+              setValue({ ...value, displayName: e.target.value })
+            }
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            英文名，可选
-          </label>
+        </label>
+        <label>
+          英文品名
           <input
-            className="w-full rounded border px-3 py-2"
-            value={productNameEN}
-            onChange={(e) => setProductNameEN(e.target.value)}
-            placeholder="例如 Coconut Water"
+            className={input}
+            value={value.productNameEN}
+            onChange={(e) =>
+              setValue({ ...value, productNameEN: e.target.value })
+            }
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            初始库存
-          </label>
+        </label>
+        <label>
+          订单每盒换算为多少个
           <input
             type="number"
-            min={0}
-            className="w-full rounded border px-3 py-2"
-            value={initialQty}
-            onChange={(e) => setInitialQty(Number(e.target.value))}
+            min="1"
+            max="10000"
+            className={input}
+            required
+            value={value.boxMultiplier}
+            onChange={(e) =>
+              setValue({ ...value, boxMultiplier: Number(e.target.value) })
+            }
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            库位
-          </label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            value={shelfLocation}
-            onChange={(e) => setShelfLocation(e.target.value)}
-            placeholder="初始库存大于 0 时必须填写"
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            低库存提醒阈值
-          </label>
+        </label>
+        <label>
+          订单每条换算为多少个
           <input
             type="number"
-            min={0}
-            className="w-full rounded border px-3 py-2"
-            value={lowStockThreshold}
-            onChange={(e) => setLowStockThreshold(Number(e.target.value))}
+            min="1"
+            max="10000"
+            className={input}
+            required
+            value={value.cartonMultiplier}
+            onChange={(e) =>
+              setValue({ ...value, cartonMultiplier: Number(e.target.value) })
+            }
           />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            操作人
-          </label>
-          <input
-            className="w-full rounded border px-3 py-2"
-            value={operator}
-            onChange={(e) => setOperator(e.target.value)}
-            placeholder="例如 Seven"
-          />
-        </div>
-      </div>
-
-      <div className="rounded bg-gray-50 p-3 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-        <p>规则：</p>
-        <p>1. SKU 不能重复。</p>
-        <p>2. 初始库存大于 0 时必须填写库位。</p>
-        <p>3. 初始库存为 0 时，系统会自动清空库位。</p>
-        <p>4. 初始库存大于 0 时，会自动写入一条 Inbound 库存流水。</p>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          disabled={loading}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {loading ? '添加中...' : '添加新品'}
+        </label>
+        <p className="text-sm text-[var(--muted)] md:col-span-2">
+          这里只创建商品资料。创建后到“盘点上架”录入散货位、整盒位及实际数量。
+        </p>
+        <button className={getActionButtonClass("primary")} disabled={busy}>
+          {busy ? "创建中…" : "创建商品"}
         </button>
-
-        <button
-  type="button"
-  onClick={() => router.push('/admin/inventory')}
-  className="rounded border border-gray-300 px-4 py-2 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
->
-  返回库存列表
-</button>
-      </div>
-    </form>
-  )
+      </form>
+    </Panel>
+  );
 }
