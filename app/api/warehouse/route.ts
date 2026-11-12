@@ -13,11 +13,16 @@ const stock = z.object({
   unitsPerPack: integer.min(1),
   quantity: integer,
   mode: z.enum(["set", "add"]),
+  position: z.number().int().min(1).max(3).optional(),
   note: z.string().max(500).optional(),
 });
 const schemas = {
   stock,
   import_stock: z.object({ rows: z.array(stock).min(1).max(1000) }),
+  reorder_locations: z.object({
+    productId: uuid,
+    locations: z.array(z.string().trim().min(1).max(60)).max(3),
+  }),
   ready: z.object({ orderId: uuid }),
   review: z.object({ orderId: uuid }),
   cancel_order: z.object({ orderId: uuid }),

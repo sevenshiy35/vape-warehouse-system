@@ -32,7 +32,7 @@ const quickActions = [
     title: "盘点上架 / 补货",
     icon: "入",
     description: "按库位录入散货和整盒库存",
-    href: "/admin/warehouse?tab=stock",
+    href: "/admin/warehouse?tab=stock_ops",
     tone: "bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950",
   },
   {
@@ -247,9 +247,7 @@ export default async function HomePage() {
                 >
                   集中拣货 / 分货打包
                 </NavButton>
-                <NavButton href="/admin/warehouse?tab=stock">
-                  库存列表
-                </NavButton>
+                <NavButton href="/admin/inventory">库存列表</NavButton>
                 <NavButton href="/admin/warehouse?tab=logs" variant="quiet">
                   作业流水
                 </NavButton>

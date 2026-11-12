@@ -4,6 +4,7 @@ export type WarehouseProduct = {
   brand: string;
   product_name_cn: string;
   display_name: string | null;
+  product_name_en?: string | null;
   default_pick_multiplier: number;
   carton_pick_multiplier: number;
 };
@@ -11,6 +12,7 @@ export type WarehouseBin = {
   id: string;
   product_id: string;
   location: string;
+  position: number | null;
   kind: "loose" | "box";
   units_per_pack: number;
   quantity: number;
@@ -54,6 +56,7 @@ export type WarehouseLine = {
   bin_id: string;
   product_id: string;
   location: string;
+  position: number;
   kind: string;
   units_per_pack: number;
   requested: number;

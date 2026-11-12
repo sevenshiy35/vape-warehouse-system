@@ -35,7 +35,7 @@ export default function NewProductForm({
         type: "success",
         title: "商品已创建，请到盘点上架录入各库位数量",
       });
-      router.push("/admin/warehouse?tab=stock");
+      router.push("/admin/warehouse?tab=stock_ops&product=" + x.productId);
     } catch (e) {
       notify({
         type: "error",

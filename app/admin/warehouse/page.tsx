@@ -20,6 +20,7 @@ async function readAll(table: string, select: string, order: string) {
       .select(select)
       .order(order)
       .range(start, start + 499);
+    if (table === "inventory_bins") query.not("position", "is", null);
     const { data, error } = await query;
     if (error) throw new Error(`读取仓库失败：${error.message}`);
     rows.push(...data);
@@ -29,17 +30,23 @@ async function readAll(table: string, select: string, order: string) {
 export default async function WarehousePage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; batch?: string }>;
+  searchParams: Promise<{
+    tab?: string;
+    batch?: string;
+    bin?: string;
+    product?: string;
+  }>;
 }) {
   if (!(await isWarehouseAdmin())) redirect("/login?next=/admin/warehouse");
   const sp = await searchParams;
+  if (sp.tab === "stock") redirect("/admin/inventory");
   const [products, bins, orders, batches, lines, events] = await Promise.all([
     readAll(
       "products",
-      "id,sku,brand,product_name_cn,display_name,default_pick_multiplier,carton_pick_multiplier",
+      "id,sku,brand,product_name_cn,display_name,product_name_en,default_pick_multiplier,carton_pick_multiplier",
       "sku",
     ),
-    readAll("inventory_bins", "*", "location"),
+    readAll("inventory_bins", "*", "position"),
     readAll(
       "orders",
       "id,order_no,customer_name,address,note,status,business_date,batch_id,created_at,ai_status,order_items(id,product_id,sku_snapshot,display_name_snapshot,product_name_cn_snapshot,recognized_qty,recognized_unit,pick_qty,packed_qty,match_status)",
@@ -80,6 +87,8 @@ export default async function WarehousePage({
         events={events.data || []}
         initialTab={sp.tab || "orders"}
         initialBatch={sp.batch || ""}
+        initialBin={sp.bin || ""}
+        initialProduct={sp.product || ""}
       />
     </PageShell>
   );

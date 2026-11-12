@@ -56,10 +56,10 @@ begin
  caught=false;
  begin perform public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(c,d),'requestId',gen_random_uuid(),'name','QA','date',current_date)); exception when others then caught=true; end;
  if not caught or (select sum(reserved) from public.inventory_bins where product_id=p)<>0 then raise exception 'QA: shortage did not roll back'; end if;
- perform public.warehouse_command('split_box',jsonb_build_object('binId',(select id from public.inventory_bins where product_id=p and kind='box'),'packs',1,'location','QA-LOOSE'));
+ perform public.warehouse_command('split_box',jsonb_build_object('binId',(select id from public.inventory_bins where product_id=p and kind='box'),'packs',2,'location','QA-LOOSE'));
  bb=(public.warehouse_command('create_batch',jsonb_build_object('orderIds',jsonb_build_array(c,d),'requestId',gen_random_uuid(),'name','QA-short','date',current_date))->>'id')::uuid;
  for line in select * from public.batch_lines where batch_id=bb loop
-  perform public.warehouse_command('pick',jsonb_build_object('lineId',line.id,'quantity',case when line.kind='box' then line.requested else 0 end));
+  perform public.warehouse_command('pick',jsonb_build_object('lineId',line.id,'quantity',case when line.kind='box' then line.requested else line.requested-5 end));
  end loop;
  perform public.warehouse_command('start_packing',jsonb_build_object('batchId',bb));
  select jsonb_agg(id) into ids from public.order_items where order_id=c;
@@ -83,5 +83,6 @@ begin
  if not caught or exists(select 1 from public.inventory_bins where product_id=p and location='QA-IMPORT') then raise exception 'QA: import not atomic'; end if;
  if (select quantity_on_hand from public.inventory where product_id=p)<>(select sum(quantity-reserved) from public.inventory_bins where product_id=p) then raise exception 'QA: legacy aggregate drift'; end if;
 end $$;
+set constraints all immediate;
 rollback;
 select 'PASS: mixed bins, unit conversion, reservations, idempotency, shortage rollback, pick, pack, return, cancellation and atomic import' as result;
