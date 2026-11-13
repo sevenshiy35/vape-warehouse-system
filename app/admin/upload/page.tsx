@@ -5,7 +5,7 @@ export default function UploadOrdersPage() {
     <PageShell>
       <PageHeader
         title="上传当天订单"
-        description="每张卡片对应一张订单，同一订单的多张截图放在同一张卡片里。上传后自动识别，核对完再汇总拣货。"
+        description="先选截图，再填地址或订单标识，上传后自动识别商品。同一订单的多张截图请放在一起。"
         actions={<NavButton href="/admin/warehouse">返回作业台</NavButton>}
       />
       <ScreenshotOrders />
