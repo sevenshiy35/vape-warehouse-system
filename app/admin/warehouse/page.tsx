@@ -40,7 +40,7 @@ export default async function WarehousePage({
   if (!(await isWarehouseAdmin())) redirect("/login?next=/admin/warehouse");
   const sp = await searchParams;
   if (sp.tab === "stock") redirect("/admin/inventory");
-  const [products, bins, orders, batches, lines, events] = await Promise.all([
+  const [products, bins, orders, batches, lines] = await Promise.all([
     readAll(
       "products",
       "id,sku,brand,product_name_cn,display_name,product_name_en,default_pick_multiplier,carton_pick_multiplier",
@@ -49,20 +49,12 @@ export default async function WarehousePage({
     readAll("inventory_bins", "*", "position"),
     readAll(
       "orders",
-      "id,order_no,customer_name,address,note,status,business_date,batch_id,created_at,ai_status,order_items(id,product_id,sku_snapshot,display_name_snapshot,product_name_cn_snapshot,recognized_qty,recognized_unit,pick_qty,packed_qty,match_status)",
+      "id,order_no,customer_name,address,note,status,business_date,batch_id,created_at,updated_at,ai_status,order_items(id,product_id,sku_snapshot,display_name_snapshot,product_name_cn_snapshot,recognized_qty,recognized_unit,pick_qty,packed_qty,match_status)",
       "created_at",
     ),
     readAll("pick_batches", "*", "created_at"),
     readAll("batch_lines", "*", "id"),
-    supabaseAdmin
-      .from("warehouse_events")
-      .select(
-        "id,action,quantity,note,created_at,products(sku),inventory_bins(location)",
-      )
-      .order("created_at", { ascending: false })
-      .limit(80),
   ]);
-  if (events.error) throw new Error(events.error.message);
   return (
     <PageShell maxWidth="max-w-7xl">
       <PageHeader
@@ -84,7 +76,6 @@ export default async function WarehousePage({
         orders={orders as unknown as WarehouseOrder[]}
         batches={batches as unknown as WarehouseBatch[]}
         lines={lines as unknown as WarehouseLine[]}
-        events={events.data || []}
         initialTab={sp.tab || "orders"}
         initialBatch={sp.batch || ""}
         initialBin={sp.bin || ""}

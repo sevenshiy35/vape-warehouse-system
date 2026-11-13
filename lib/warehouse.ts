@@ -38,6 +38,7 @@ export type WarehouseOrder = {
   business_date: string;
   batch_id: string | null;
   created_at: string;
+  updated_at?: string;
   ai_status: string;
   order_items: WarehouseItem[];
 };

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Panel, StatCard, getActionButtonClass } from "./PageChrome";
 import { useFeedback } from "./FeedbackProvider";
 import BatchDeliveryAddresses from "./BatchDeliveryAddresses";
+import OrderShipmentLogs from "./OrderShipmentLogs";
 import {
   easternToday,
   warehouseStatus,
@@ -16,15 +17,6 @@ import {
   type WarehouseLine,
 } from "@/lib/warehouse";
 
-type Event = {
-  id: string;
-  action: string;
-  quantity: number;
-  note: string | null;
-  created_at: string;
-  products: unknown;
-  inventory_bins: unknown;
-};
 type StockInput = {
   productId: string;
   location: string;
@@ -39,7 +31,6 @@ type Props = {
   orders: WarehouseOrder[];
   batches: WarehouseBatch[];
   lines: WarehouseLine[];
-  events: Event[];
   initialTab: string;
   initialBatch: string;
   initialBin?: string;
@@ -47,28 +38,12 @@ type Props = {
 };
 const input =
   "min-h-11 w-full rounded-xl border border-[var(--border-soft)] bg-[var(--surface)] px-3 py-2 text-base";
-const actionLabels: Record<string, string> = {
-  count: "盘点",
-  inbound: "补货",
-  pick: "拣货",
-  return: "退回",
-  pack: "打包完成",
-  location_order: "库位顺序",
-};
-function displayRelation(value: unknown, key: string) {
-  const row = Array.isArray(value) ? value[0] : value;
-  return row && typeof row === "object"
-    ? String((row as Record<string, unknown>)[key] || "")
-    : "";
-}
-
 export default function WarehouseClient({
   products,
   bins,
   orders,
   batches,
   lines,
-  events,
   initialTab,
   initialBatch,
   initialBin,
@@ -1030,43 +1005,7 @@ export default function WarehouseClient({
             )}
         </>
       )}
-      {tab === "logs" && (
-        <Panel>
-          <h2 className="mb-4 text-xl font-bold">最近作业流水</h2>
-          {!events.length && (
-            <p className="py-8 text-center text-[var(--muted)]">
-              重新盘点上架后，操作记录会显示在这里。
-            </p>
-          )}
-          <div className="space-y-3">
-            {events.map((e) => (
-              <div
-                className="flex flex-wrap justify-between gap-2 border-b border-[var(--border-soft)] py-3"
-                key={e.id}
-              >
-                <div>
-                  <p className="font-semibold">
-                    {actionLabels[e.action] || e.action} ·{" "}
-                    {displayRelation(e.products, "sku")} ·{" "}
-                    {displayRelation(e.inventory_bins, "location")}
-                  </p>
-                  <p className="text-sm text-[var(--muted)]">{e.note}</p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {new Date(e.created_at).toLocaleString("zh-CN", {
-                      timeZone: "America/New_York",
-                    })}{" "}
-                    ET
-                  </p>
-                </div>
-                <strong>
-                  {e.quantity > 0 ? "+" : ""}
-                  {e.quantity}
-                </strong>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      )}
+      {tab === "logs" && <OrderShipmentLogs orders={orders} />}
     </div>
   );
 }
