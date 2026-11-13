@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Panel, StatCard, getActionButtonClass } from "./PageChrome";
 import { useFeedback } from "./FeedbackProvider";
+import BatchDeliveryAddresses from "./BatchDeliveryAddresses";
 import {
   easternToday,
   warehouseStatus,
@@ -1016,6 +1017,17 @@ export default function WarehouseClient({
               )}
             </Panel>
           )}
+          {currentBatch &&
+            ["packing", "completed", "closed"].includes(
+              currentBatch.status,
+            ) && (
+              <BatchDeliveryAddresses
+                key={currentBatch.id}
+                batchName={currentBatch.name}
+                businessDate={currentBatch.business_date}
+                orders={batchOrders}
+              />
+            )}
         </>
       )}
       {tab === "logs" && (
