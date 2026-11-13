@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useFeedback } from '@/components/FeedbackProvider'
 
@@ -30,12 +30,14 @@ export default function ConfirmAiOrderItemButton({
   const router = useRouter()
   const { confirm, notify } = useFeedback()
   const [loading, setLoading] = useState(false)
+  const [refreshing, startRefresh] = useTransition()
 
-  const locked = orderStatus === 'completed' || orderStatus === 'cancelled'
+  const locked = !['uploaded', 'need_review'].includes(orderStatus)
+  const validMatch = matchStatus === 'matched' || matchStatus === 'need_review'
   const canConfirm =
     !locked &&
     !alreadyAdded &&
-    matchStatus === 'need_review' &&
+    validMatch &&
     Boolean(productId) &&
     Boolean(quantity && quantity > 0)
 
@@ -50,8 +52,8 @@ export default function ConfirmAiOrderItemButton({
       return
     }
 
-    if (matchStatus !== 'need_review') {
-      notify({ type: 'warning', title: '只有需确认的AI候选商品可以这样加入' })
+    if (!validMatch) {
+      notify({ type: 'warning', title: '请先手动选择正确的商品' })
       return
     }
 
@@ -63,7 +65,7 @@ export default function ConfirmAiOrderItemButton({
     const normalizedUnit = unit && unit !== '未知' ? unit : '支'
 
     const ok = await confirm({
-      title: '确认加入这个AI候选商品？',
+      title: '确认加入这个 AI 商品？',
       message: `${rawText || productName}\n\n将加入：${productName}\n数量：${quantity} ${normalizedUnit}`,
       confirmText: '确认加入',
       tone: 'success',
@@ -73,33 +75,31 @@ export default function ConfirmAiOrderItemButton({
 
     setLoading(true)
 
-    const res = await fetch('/api/order-items/add', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        orderId,
-        productId,
-        qty: quantity,
-        unit: normalizedUnit,
-      }),
-    })
-
-    const data = await res.json()
-    setLoading(false)
-
-    if (!res.ok) {
+    try {
+      const res = await fetch('/api/order-items/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          productId,
+          qty: quantity,
+          unit: normalizedUnit,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '加入失败')
+      notify({ type: 'success', title: 'AI 商品已加入订单' })
+      startRefresh(() => router.refresh())
+    } catch (error) {
       notify({
         type: 'error',
         title: '加入失败',
-        message: data.error,
+        message:
+          error instanceof Error ? error.message : '网络请求失败，请重试',
       })
-      return
+    } finally {
+      setLoading(false)
     }
-
-    notify({ type: 'success', title: 'AI候选商品已加入订单' })
-    router.refresh()
   }
 
   if (alreadyAdded) {
@@ -110,7 +110,7 @@ export default function ConfirmAiOrderItemButton({
     )
   }
 
-  if (matchStatus !== 'need_review') {
+  if (!validMatch) {
     return <span className="text-gray-400 dark:text-gray-500">-</span>
   }
 
@@ -118,7 +118,7 @@ export default function ConfirmAiOrderItemButton({
     <button
       type="button"
       onClick={handleConfirm}
-      disabled={!canConfirm || loading}
+      disabled={!canConfirm || loading || refreshing}
       title={
         canConfirm
           ? '确认后会加入订单商品明细'
@@ -126,7 +126,11 @@ export default function ConfirmAiOrderItemButton({
       }
       className="inline-flex min-h-9 items-center justify-center rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
     >
-      {loading ? '加入中...' : '确认加入'}
+      {loading
+        ? '加入中...'
+        : matchStatus === 'matched'
+          ? '加入订单'
+          : '确认加入'}
     </button>
   )
 }

@@ -6,9 +6,11 @@ import { getActionButtonClass } from "./PageChrome";
 export default function ConfirmOrderButton({
   orderId,
   status,
+  insufficientCount = 0,
 }: {
   orderId: string;
   status: string;
+  insufficientCount?: number;
 }) {
   const [busy, setBusy] = useState(false);
   const router = useRouter(),
@@ -17,8 +19,7 @@ export default function ConfirmOrderButton({
     if (
       !(await confirm({
         title: "已逐项核对截图与订单商品？",
-        message:
-          "请确认没有漏掉未识别的商品，数量和盒／条换算均正确。确认后订单进入待拣货队列；生成批次时才占用库存。",
+        message: `${insufficientCount ? `当前有 ${insufficientCount} 项库存不足，请先补货或后续安排批次。\n\n` : ""}请确认没有漏掉未识别的商品，数量和盒／条换算均正确。确认后订单进入待拣货队列；生成批次时才占用库存。`,
         confirmText: "核对无误，待拣货",
       }))
     )
