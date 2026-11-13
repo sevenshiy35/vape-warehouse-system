@@ -300,45 +300,109 @@ export default async function OrderDetail({
                 尚无商品。等待识别，或手动添加。
               </p>
             )}
-            <div className="space-y-3">
-              {items.map((item, index) => (
-                <article
-                  key={item.id}
-                  className="rounded-xl border border-[var(--border-soft)] p-4"
+            {items.length > 0 && (
+              <div className="overflow-hidden rounded-xl border border-[var(--border-soft)]">
+                <table
+                  className="w-full table-fixed text-sm"
+                  aria-label="订单商品明细"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-semibold">
-                        {item.sku_snapshot} ·{" "}
-                        {item.display_name_snapshot ||
-                          item.product_name_cn_snapshot}
-                      </p>
-                      <p className="mt-1 text-sm text-[var(--muted)]">
-                        截图数量 {item.recognized_qty} {item.recognized_unit} →
-                        实拣 {item.pick_qty} 个
-                      </p>
-                    </div>
-                    {editable && (
-                      <div className="flex gap-2">
-                        <EditOrderItemButton
-                          itemId={item.id}
-                          orderStatus={o.status}
-                          currentQty={item.recognized_qty}
-                          currentUnit={item.recognized_unit}
-                        />
-                        <DeleteOrderItemButton
-                          itemId={item.id}
-                          orderStatus={o.status}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {canForecast && (
-                    <OrderInventoryStatus forecast={forecasts[index]} />
-                  )}
-                </article>
-              ))}
-            </div>
+                  <colgroup>
+                    <col />
+                    <col className="w-[18%]" />
+                    {canForecast && <col className="w-[29%]" />}
+                    {editable && <col className="w-11 sm:w-20" />}
+                  </colgroup>
+                  <thead className="bg-[var(--background)] text-xs text-[var(--muted)]">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-3 py-3 text-left font-medium"
+                      >
+                        商品
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-1 py-3 text-center font-medium"
+                      >
+                        实拣
+                      </th>
+                      {canForecast && (
+                        <th
+                          scope="col"
+                          className="px-2 py-3 text-left font-medium"
+                        >
+                          库存
+                          <span className="mt-0.5 block font-normal">
+                            可用 → 剩余
+                          </span>
+                        </th>
+                      )}
+                      {editable && (
+                        <th
+                          scope="col"
+                          className="px-1 py-3 text-center font-medium"
+                        >
+                          操作
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-soft)]">
+                    {items.map((item, index) => (
+                      <tr
+                        key={item.id}
+                        className="h-28 align-middle hover:bg-[var(--background)]/50"
+                      >
+                        <td className="break-words px-3 py-5">
+                          <p className="font-semibold leading-6">
+                            {item.display_name_snapshot ||
+                              item.product_name_cn_snapshot}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            {item.sku_snapshot}
+                          </p>
+                        </td>
+                        <td className="px-1 py-5 text-center">
+                          <p className="text-xl font-bold tabular-nums">
+                            {item.pick_qty}
+                            <span className="ml-0.5 text-xs font-normal">
+                              个
+                            </span>
+                          </p>
+                          <p className="mt-1 break-words text-xs text-[var(--muted)]">
+                            原 {item.recognized_qty} {item.recognized_unit}
+                          </p>
+                        </td>
+                        {canForecast && (
+                          <td className="px-2 py-5">
+                            <OrderInventoryStatus
+                              forecast={forecasts[index]}
+                              compact
+                            />
+                          </td>
+                        )}
+                        {editable && (
+                          <td className="px-1 py-5">
+                            <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+                              <EditOrderItemButton
+                                itemId={item.id}
+                                orderStatus={o.status}
+                                currentQty={item.recognized_qty}
+                                currentUnit={item.recognized_unit}
+                              />
+                              <DeleteOrderItemButton
+                                itemId={item.id}
+                                orderStatus={o.status}
+                              />
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </Panel>
 
           {(editable || aiItems.length > 0) && (
