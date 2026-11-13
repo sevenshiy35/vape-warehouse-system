@@ -18,6 +18,7 @@ type SortKey =
   | "display_name"
   | "product_name_en"
   | "location"
+  | "first_location"
   | "quantity"
   | "status"
   | "relevance";
@@ -31,6 +32,7 @@ const sortOptions: [SortKey, string][] = [
   ["display_name", "展示名"],
   ["product_name_en", "英文名"],
   ["location", "库位"],
+  ["first_location", "第一库位"],
   ["quantity", "库存"],
   ["status", "状态"],
   ["relevance", "相关度"],
@@ -162,12 +164,16 @@ export default function InventoryTable({
             ? available(p.id)
             : sort === "status"
               ? statusOf(p.id)
-              : sort === "location"
+              : sort === "first_location"
                 ? stockOf(p.id)
-                    .sort((a, b) => (a.position || 0) - (b.position || 0))
-                    .map((b) => b.location)
-                    .join(" ")
-                : p[sort] || "";
+                    .find((b) => b.position === 1)
+                    ?.location.trim() || ""
+                : sort === "location"
+                  ? stockOf(p.id)
+                      .sort((a, b) => (a.position || 0) - (b.position || 0))
+                      .map((b) => b.location)
+                      .join(" ")
+                  : p[sort] || "";
       const av = value(a),
         bv = value(b);
       if (av === "" && bv !== "") return 1;
@@ -450,7 +456,9 @@ export default function InventoryTable({
                   className="whitespace-nowrap border-b border-gray-200 p-3 dark:border-gray-700"
                   key={pos}
                 >
-                  库位 {pos}
+                  {pos === 1
+                    ? heading("库位 1", "first_location")
+                    : `库位 ${pos}`}
                 </th>
               ))}
               <th className="border-b border-gray-200 p-3 dark:border-gray-700">
