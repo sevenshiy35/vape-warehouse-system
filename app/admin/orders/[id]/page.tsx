@@ -174,50 +174,11 @@ export default async function OrderDetail({
         }
       />
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <aside aria-label="订单截图" className="min-w-0 lg:sticky lg:top-6">
-          <Panel className="flex flex-col lg:max-h-[calc(100dvh-3rem)]">
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-xl font-bold">原始订单截图</h2>
-              <p className="text-xs text-[var(--muted)]">
-                共 {images.length} 张 · 点击查看原图
-              </p>
-            </div>
-            <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain rounded-xl max-lg:max-h-[65dvh]">
-              {!images.length && (
-                <p className="py-10 text-center text-[var(--muted)]">
-                  还没有订单截图，请在右侧补充。
-                </p>
-              )}
-              {images.map((img, index) =>
-                img.url ? (
-                  <a
-                    key={img.path}
-                    href={img.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block"
-                  >
-                    <Image
-                      unoptimized
-                      src={img.url}
-                      alt={`订单截图 ${index + 1}`}
-                      width={900}
-                      height={1400}
-                      className="h-auto w-full rounded-xl border border-[var(--border-soft)]"
-                    />
-                  </a>
-                ) : (
-                  <p key={img.path} className="text-red-600">
-                    截图暂时无法加载，请刷新重试。
-                  </p>
-                ),
-              )}
-            </div>
-          </Panel>
-        </aside>
-
-        <div className="min-w-0 space-y-5" aria-label="订单审核与操作">
-          <Panel>
+        <aside
+          aria-label="订单信息与截图"
+          className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)]"
+        >
+          <Panel className="shrink-0 lg:max-h-[45dvh] lg:overflow-y-auto">
             <h2 className="text-xl font-bold">订单信息与操作</h2>
             <p className="mt-3 break-words">
               {o.customer_name} {o.address}
@@ -266,6 +227,48 @@ export default async function OrderDetail({
             )}
           </Panel>
 
+          <Panel className="flex min-h-0 flex-col">
+            <div className="mb-4 flex shrink-0 flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-xl font-bold">原始订单截图</h2>
+              <p className="text-xs text-[var(--muted)]">
+                共 {images.length} 张 · 点击查看原图
+              </p>
+            </div>
+            <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain rounded-xl max-lg:max-h-[65dvh]">
+              {!images.length && (
+                <p className="py-10 text-center text-[var(--muted)]">
+                  还没有订单截图，可点击上方“补传截图”添加。
+                </p>
+              )}
+              {images.map((img, index) =>
+                img.url ? (
+                  <a
+                    key={img.path}
+                    href={img.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block"
+                  >
+                    <Image
+                      unoptimized
+                      src={img.url}
+                      alt={`订单截图 ${index + 1}`}
+                      width={900}
+                      height={1400}
+                      className="h-auto w-full rounded-xl border border-[var(--border-soft)]"
+                    />
+                  </a>
+                ) : (
+                  <p key={img.path} className="text-red-600">
+                    截图暂时无法加载，请刷新重试。
+                  </p>
+                ),
+              )}
+            </div>
+          </Panel>
+        </aside>
+
+        <div className="min-w-0 space-y-5" aria-label="订单审核与操作">
           <Panel>
             <h2 className="text-xl font-bold">
               订单商品 · 共{" "}
@@ -433,7 +436,7 @@ export default async function OrderDetail({
                 <p className="py-5 text-sm text-[var(--muted)]">
                   {o.ai_status === "processing"
                     ? "正在识别截图…"
-                    : "暂无 AI 识别结果，可使用上方的识别按钮。"}
+                    : "暂无 AI 识别结果，可在“订单信息与操作”中点击识别按钮。"}
                 </p>
               )}
               <div className="mt-4 space-y-3">
